@@ -18,15 +18,70 @@ def get_cookie_playwright():
     return cookie_for_requests
 
 
-url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
+def get_sports(session_cookie):
+    url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
+    querystring = {"v": "4.48.18", "locale": "sr"}
+    headers = {
+        "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
 
-querystring = {"v": "4.48.18", "locale": "sr"}
+    response = r.request("GET", url, headers=headers, params=querystring)
+
+    return response
+
+
+def get_sport_data(sport_dict, session_cookie):
+    request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
+    token = '#'.join([str(pair[1]) for pair in sport_dict['leagues']])
+    query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
+    header = {
+        "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
+
+    sport_data_response = r.request("GET", request_url, headers=header, params=query)
+
+    return sport_data_response
+
+
+# Program
+
 cookie = get_cookie_playwright()
 
-headers = {"cookie": f"SESSION={cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
-response = r.request("GET", url, headers=headers, params=querystring)
+get_sports_response_json = get_sports(cookie).json()
 
-# print(response.text)
-print(response.json())
+# Parse response
 
-# TODO: extract 'name' and for every sport name extract 'betLeagueId' that are played
+sports = []
+for i in get_sports_response_json:
+    sport = {
+        'name': i['name'],
+        'leagues': [],
+    }
+    for league in i['leagues']:
+        sport['leagues'].append((league['name'], league['betLeagueId']))
+
+    if len(sport['leagues']) != 0:
+        sports.append(sport)
+        # print(json.dumps(sport, indent=4, separators=(',', ': ')))
+
+# Get data for every sport
+
+for sport in sports:
+    # print(sport['name'])
+    res_json = get_sport_data(sport, cookie).json()
+
+    # Playing around
+    # res_json = get_sport_data(sports[10], cookie).json()
+    for league in res_json:
+        print("LEAGUE NAME: ", league['name'])
+        print("matchList length: ", len(league['matchList']))
+        for match in league['matchList']:
+            print('HOME: ', match['home'], " - vs - ", "AWAY: ", match['away'])
+            print(match['kickOffTime'], " is ", match['kickOffTimeString'])
+            print('\n')
+            for i in match['odBetPickGroups']:
+                for j in i['tipTypes']:
+                    if j['value'] != 0:
+                        print(i['name'])
+                        print(j['tipType'], " -  ", j['name'], " - ", j['value'])
+        print('\n\n')
+
+# TODO: Decide how to organize and store data for arbitrage after seeing how data from MOZART looks like
