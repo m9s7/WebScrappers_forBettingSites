@@ -1,6 +1,8 @@
-import requests as r
+import json
 
 from playwright.sync_api import sync_playwright
+
+from requests_to_server.maxbet_requests import get_sport_data, get_curr_sidebar_sports_and_leagues
 
 
 def get_cookie_playwright():
@@ -18,70 +20,55 @@ def get_cookie_playwright():
     return cookie_for_requests
 
 
-def get_sports(session_cookie):
-    url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
-    querystring = {"v": "4.48.18", "locale": "sr"}
-    headers = {
-        "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
+def parse_sidebar_sports(sidebar_sports_json):
+    sports = []
 
-    response = r.request("GET", url, headers=headers, params=querystring)
+    for sport in sidebar_sports_json:
+        my_sport = {
+            'name': sport['name'],
+            'leagues': [],
+        }
+        for league_dict in sport['leagues']:
+            my_sport['leagues'].append((league_dict['name'], league_dict['betLeagueId']))
 
-    return response
+        if len(my_sport['leagues']) != 0:
+            sports.append(my_sport)
+            # print(json.dumps(my_sport, indent=4, separators=(',', ': ')))
+    return sports
 
-
-def get_sport_data(sport_dict, session_cookie):
-    request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
-    token = '#'.join([str(pair[1]) for pair in sport_dict['leagues']])
-    query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
-    header = {
-        "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
-
-    sport_data_response = r.request("GET", request_url, headers=header, params=query)
-
-    return sport_data_response
-
-
-# Program
 
 cookie = get_cookie_playwright()
+response = get_curr_sidebar_sports_and_leagues(cookie).json()
 
-get_sports_response_json = get_sports(cookie).json()
-
-# Parse response
-
-sports = []
-for i in get_sports_response_json:
-    sport = {
-        'name': i['name'],
-        'leagues': [],
-    }
-    for league in i['leagues']:
-        sport['leagues'].append((league['name'], league['betLeagueId']))
-
-    if len(sport['leagues']) != 0:
-        sports.append(sport)
-        # print(json.dumps(sport, indent=4, separators=(',', ': ')))
+# parsed sidebar_sports is a list of dictionaries
+# {
+#     "name": string,                   # Sport name
+#     "leagues": [(string, int)]        # list of pairs < League_name, League ID >
+# }
+sidebar_sports = parse_sidebar_sports(response)
 
 # Get data for every sport
 
-for sport in sports:
-    # print(sport['name'])
-    res_json = get_sport_data(sport, cookie).json()
+# for sport in sports:
+#     # print(sport['name'])
+#     res_json = get_sport_data(sport, cookie).json()
 
-    # Playing around
-    # res_json = get_sport_data(sports[10], cookie).json()
-    for league in res_json:
-        print("LEAGUE NAME: ", league['name'])
-        print("matchList length: ", len(league['matchList']))
-        for match in league['matchList']:
-            print('HOME: ', match['home'], " - vs - ", "AWAY: ", match['away'])
-            print(match['kickOffTime'], " is ", match['kickOffTimeString'])
-            print('\n')
-            for i in match['odBetPickGroups']:
-                for j in i['tipTypes']:
-                    if j['value'] != 0:
-                        print(i['name'])
-                        print(j['tipType'], " -  ", j['name'], " - ", j['value'])
-        print('\n\n')
+tenisID = 6
+
+res_json = get_sport_data(sidebar_sports[tenisID], cookie).json()
+
+for league in res_json:
+    print("LEAGUE NAME: ", league['name'])
+    print("matchList length: ", len(league['matchList']))
+    for match in league['matchList']:
+        print('HOME: ', match['home'], " - vs - ", "AWAY: ", match['away'])
+        print(match['kickOffTime'], " is ", match['kickOffTimeString'])
+        for i in match['odBetPickGroups']:
+            for j in i['tipTypes']:
+                if j['value'] != 0 and (j['tipType']).startswith("KI_"):
+                    print(i['name'])
+                    print(j['tipType'], " -  ", j['name'], " - ", j['value'])
+        print('\n')
+    print('\n\n')
 
 # TODO: Decide how to organize and store data for arbitrage after seeing how data from MOZART looks like

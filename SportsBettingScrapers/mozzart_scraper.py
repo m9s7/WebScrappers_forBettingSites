@@ -1,155 +1,78 @@
 # don't need cookies for mozart
 
-import requests as r
-from datetime import datetime
-
-date = datetime.today().strftime('%Y-%m-%d')
+from requests_to_server.mozzart_requests import get_curr_sidebar_sports_and_leagues, get_all_subgames, get_match_ids, \
+    get_odds
 
 
-def get_football():
-    for sport in list_of_curr_sports_dictionaries:
-        if sport['name'] == 'Fudbal':
+# Get a specific "sport" that is currently offered
+def get_sport_with_name(name):
+    for sport in sidebar_sports:
+        if sport['name'] == name:
             # Can return list of ( sportId, sportName ) pairs, because IDs are needed to get subgames
-            print("Football id: ", sport['id'])
+            print(name, " id: ", sport['id'])
             return sport
     return None
 
 
-def get_curr_sports():
-    url = "https://www.mozzartbet.com/getRegularGroups"
-    payload = {
-        "date": date,
-        "sportIds": [],
-        "competitionIds": [],
-        "sort": "bycompetition",
-        "specials": None,
-        "subgames": [],
-        "size": 1000,
-        "mostPlayed": False,
-        "type": "betting",
-        "numberOfGames": 0,
-        "activeCompleteOffer": False,
-        "lang": "sr",
-        "offset": 0
-    }
-    headers = {
-        "cookie": "i18next=sr; SERVERID=MB-N7",
-        "authority": "www.mozzartbet.com",
-        "accept": "application/json, text/plain, */*",
-        "accept-language": "en-US,en;q=0.9,bs;q=0.8",
-        "dnt": "1",
-        "origin": "https://www.mozzartbet.com",
-        "referer": "https://www.mozzartbet.com/sr",
-        "x-requested-with": "XMLHttpRequest"
-    }
+# Focused subgames are subgames I plan on comparing with other betting sites
+def get_focused_subgames_for_sport_id(sport_id):
+    all_subgames_dictionary = get_all_subgames().json()
+    # Format:
+    # all_subgames_dictionary is a map where keys are ordered integers [1..77]
+    # and values are lists which contain subgame dictionaries
 
-    response = r.request("POST", url, json=payload, headers=headers)
+    offer_list = all_subgames_dictionary[str(sport_id)]
+    focused_subgames = []
 
-    return response
+    for offer in offer_list:
+        if offer['name'] != "Konačan ishod":
+            continue
+        # offer_id = offer['id']
+        # print("Offer name ", offer['name'])
 
+        for header in offer['regularHeaders']:
+            if len(header['gameName']) != 1:
+                print("KONACNO SMO NASLI ODSTUPANJE OD OVE GLUPE STRUKTURE")
+                exit(1)
+            game = header['gameName'][0]
+            # game_id = game['id']
+            short_name = game['shortName']
+            if short_name != 'ki':
+                continue
+            # print("Game name: ", short_name)
+            # print("Subgames: ")
+            for subgame in header['subGameName']:
+                subgame_id = subgame['id']
+                focused_subgames.append(subgame_id)
+                subgame_name = subgame['name']
+                subgame_desc = subgame['description']
+                # print(subgame_id, " - ", subgame_name, " (", subgame_desc, ")")
 
-def get_all_subgames():
-    url = "https://www.mozzartbet.com/getAllGames"
-    headers = {
-        "cookie": "i18next=sr; SERVERID=MB-N7",
-        "authority": "www.mozzartbet.com",
-        "accept": "application/json, text/plain, */*",
-        "accept-language": "en-US,en;q=0.9,bs;q=0.8",
-        "referer": "https://www.mozzartbet.com/sr"
-    }
-
-    response = r.request("GET", url, headers=headers)
-
-    return response
+    return focused_subgames
 
 
-list_of_curr_sports_dictionaries = get_curr_sports().json()
+sidebar_sports = get_curr_sidebar_sports_and_leagues().json()
 
-# # Description of a Sport dictionary
-# "id": int           # sport ID
-# "name": string      # sport name
-# "count": int        # total games curr offered for that sport
-# "compets": []       # list of league dictionaries
-#
-# # Description of a League dictionary
-# "id": int           # league id
-# "name": string      # league name
-# "shortName": string # league short name
-# "count": int        # num of games curr played in that league
-
-# Get football
-
-football = get_football()
-
-if football is None:
+tennis = get_sport_with_name("Tenis")
+if tennis is None:
     print("Send email")
     exit(1)
+tennisID = tennis['id']
 
 # Get subgameIds za "Konacan ishod"
+subgames = get_focused_subgames_for_sport_id(tennisID)
+# print(subgames)
 
-all_subgames_dictionary = get_all_subgames().json()
-# Fomat:
-# all_subgames_dictionary is a map where keys are ordered integers [1..77]
-# and values are lists which contain subgame dictionaries
+# tennisID
+matches_response = get_match_ids().json()['matches']
+print(matches_response)
 
 
-# Sport = Football (id = 1)
-#   Offer = "Kompletna ponuda" (id = 5ada3fc8df923343c250512b, spec for football)
-#       header
-#           game = "Konačan ishod" (id = -776604)
-#           subgame = "X" (id = 1001001002)
+# Odavde mi trebao da izvuces i ko igra i ko je 1 ko je 2
+match_ids = []
+for match in matches_response:
+    match_ids.append(match['id'])
 
-# # Description of subgame dictionary
-# "id": string                      # subgame ID ex. "5ada3fc8df923343c250512b"
-# "name": string                    # subgame name ex. "Kompletna ponuda"
-# "subgameIds": []                  # just a list of subgameIDs, no idea why they are grouped there
-# "prioritySubgameIds": []          # list of subgameIDs shown on the front page without having to expand menu
-# "priorityHeaders": []             #
-# "regularHeaders": []              # list of headers and basically header = game wrapper
+# print(match_ids[1:10])
 
-# # Header dictionary
-# "sportId": int                    # sportID ex. 1 for Football
-# "gameName": []                    # list which usually contains one Game dictionary
-# "subGameName": []                 # list which contains Subgame dictionaries for that game
-# "specialOddValueType": "NONE",
-# "priority": false
-
-# # Game dictionary
-# "id": -776604,
-# "languageCode": "sr",
-# "name": "Konačan ishod",
-# "shortName": "ki",
-# "description": null
-
-# # Subgame dictionary
-# "id": 1001001002,
-# "languageCode": "sr",
-# "name": "X",
-# "shortName": null,
-# "description": "Meč će se završiti nerešenim rezultatom"
-
-footballID = football['id']
-
-offerList = all_subgames_dictionary[str(footballID)]
-
-for offer in offerList:
-    if offer['name'] != "Konačan ishod":
-        continue
-    offerID = offer['id']
-    print("Offer name ", offer['name'])
-    for header in offer['regularHeaders']:
-        for game in header['gameName']:
-            gameID = game['id']
-            gameName = game['name']  # postoji i shortName (ex. Konačan ishod = ki)
-            if gameName != "Konačan ishod":
-                continue
-            print("Game name: ", gameName)
-        print("Subgames: ")
-        for subgame in header['subGameName']:
-            subgameID = subgame['id']
-            subgameName = subgame['name']
-            subgameDesc = subgame['description']
-            print(subgameID, " - ", subgameName, " (", subgameDesc, ")")
-
-# TODO: separate response data structure documentation into a separate file
-# TODO: switch first implementation from football to tennis because its even simpler
+odds = get_odds(match_ids[1:10], subgames)
