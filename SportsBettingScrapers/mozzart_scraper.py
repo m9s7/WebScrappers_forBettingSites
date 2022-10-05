@@ -1,5 +1,7 @@
 # don't need cookies for mozart
+import sys
 
+from models.match_model import Match, Participant, Subgame
 from requests_to_server.mozzart_requests import get_curr_sidebar_sports_and_leagues, get_all_subgames, get_match_ids, \
     get_odds
 
@@ -39,13 +41,11 @@ def get_focused_subgames_for_sport_id(sport_id):
             short_name = game['shortName']
             if short_name != 'ki':
                 continue
-            # print("Game name: ", short_name)
-            # print("Subgames: ")
             for subgame in header['subGameName']:
                 subgame_id = subgame['id']
                 focused_subgames.append(subgame_id)
-                subgame_name = subgame['name']
-                subgame_desc = subgame['description']
+                # subgame_name = subgame['name']
+                # subgame_desc = subgame['description']
                 # print(subgame_id, " - ", subgame_name, " (", subgame_desc, ")")
 
     return focused_subgames
@@ -53,6 +53,8 @@ def get_focused_subgames_for_sport_id(sport_id):
 
 sidebar_sports = get_curr_sidebar_sports_and_leagues().json()
 
+# Košarka nema kodds?
+# Limit yourself to tennis
 tennis = get_sport_with_name("Tenis")
 if tennis is None:
     print("Send email")
@@ -63,16 +65,42 @@ tennisID = tennis['id']
 subgames = get_focused_subgames_for_sport_id(tennisID)
 # print(subgames)
 
-# tennisID
-matches_response = get_match_ids().json()['matches']
-print(matches_response)
 
-
-# Odavde mi trebao da izvuces i ko igra i ko je 1 ko je 2
-match_ids = []
+# Get matches and participants
+matches_response = get_match_ids(tennisID).json()['matches']
+matches = {}
 for match in matches_response:
-    match_ids.append(match['id'])
+    if match['specialType'] != 0:
+        continue
 
-# print(match_ids[1:10])
+    m = Match(match['id'], match['startTime'])
+    for p in match['participants']:
+        m.participants.append(Participant(p['id'], p['name']))
+    matches[match['id']] = m
+    # print(m)
 
-odds = get_odds(match_ids[1:10], subgames)
+
+# Get odds for chosen matches and subgames
+odds = get_odds(list(matches.keys()), subgames).json()
+for o in odds:
+    for sg in o['kodds'].values():
+        s = Subgame(
+            game_name=sg['subGame']['gameName'],
+            game_shortname=sg['subGame']['gameShortName'],
+            subgame_name=sg['subGame']['subGameName'],
+            subgame_description=sg['subGame']['subGameDescription'],
+            value=sg['value']
+        )
+        # print(s)
+        matches[o['id']].subgames.append(s)
+
+# # Print results
+# for m in matches.values():
+#     print(m)
+
+original_stdout = sys.stdout
+with open('mozz_tennis.txt', 'w', encoding="utf-8") as f:
+    sys.stdout = f
+    for m in matches.values():
+        print(m)
+    sys.stdout = original_stdout

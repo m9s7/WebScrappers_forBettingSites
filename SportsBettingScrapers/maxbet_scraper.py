@@ -1,7 +1,8 @@
-import json
+import sys
 
 from playwright.sync_api import sync_playwright
 
+from models.match_model import Match, Participant, Subgame
 from requests_to_server.maxbet_requests import get_sport_data, get_curr_sidebar_sports_and_leagues
 
 
@@ -53,22 +54,54 @@ sidebar_sports = parse_sidebar_sports(response)
 #     # print(sport['name'])
 #     res_json = get_sport_data(sport, cookie).json()
 
+# basket id = 4
 tenisID = 6
 
 res_json = get_sport_data(sidebar_sports[tenisID], cookie).json()
 
+# class Match:
+#     def __init__(self, match_id, start_time, participants=None, subgames=None):
+
+matches = {}
 for league in res_json:
-    print("LEAGUE NAME: ", league['name'])
-    print("matchList length: ", len(league['matchList']))
+    # print("LEAGUE NAME: ", league['name'])
+    # print("matchList length: ", len(league['matchList']))
     for match in league['matchList']:
-        print('HOME: ', match['home'], " - vs - ", "AWAY: ", match['away'])
-        print(match['kickOffTime'], " is ", match['kickOffTimeString'])
+        # print(match['id'])
+        m = Match(
+            match_id=match['id'],
+            start_time=match['kickOffTime'],
+            participants=[
+                Participant(match['homeId'], match['home']),
+                Participant(match['awayId'], match['away'])
+            ]
+        )
+        # print('HOME: ', match['home'], " - vs - ", "AWAY: ", match['away'])
+        # print(match['kickOffTime'], " is ", match['kickOffTimeString'])
         for i in match['odBetPickGroups']:
             for j in i['tipTypes']:
+                # maybe j['value'] != 0 is bad
                 if j['value'] != 0 and (j['tipType']).startswith("KI_"):
-                    print(i['name'])
-                    print(j['tipType'], " -  ", j['name'], " - ", j['value'])
-        print('\n')
-    print('\n\n')
+                    s = Subgame(
+                        game_name=i['name'],
+                        game_shortname=j['tipType'],
+                        subgame_name=j['name'],
+                        subgame_description=j['description'],
+                        value=j['value']
+                    )
+                    m.subgames.append(s)
+                    # print(i['name'])
+                    # print(j['tipType'], " -  ", j['name'], " - ", j['value'])
+        matches[match['id']] = m
+        # print(m)
 
-# TODO: Decide how to organize and store data for arbitrage after seeing how data from MOZART looks like
+# # Print results
+# for m in matches.values():
+#     print(m)
+
+original_stdout = sys.stdout
+with open('maxb_tennis.txt', 'w', encoding="utf-8") as f:
+    sys.stdout = f
+    for m in matches.values():
+        print(m)
+    sys.stdout = original_stdout

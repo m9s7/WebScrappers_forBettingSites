@@ -114,10 +114,11 @@ def get_all_subgames():
 # # # Match dictionary description
 # # "id": int,                                      # match id ex. 6700725
 # # "startTime": 1664935500000,                     # match start time in sec since epoch
+# # "specialType": 0                                # interested only if specialType=0 else it's an unusable bonus pick
 # # "competition_name_sr": "ATP  TOKIO  TVRDA",     # league name
 # # "participants": []                              # list of 2 participant dict
 # # irrelevant:
-# # specialType, matchNumber, gameCounts, countKodds, oddsCount, mainMatch, competition
+# # matchNumber, gameCounts, countKodds, oddsCount, mainMatch, competition
 #
 # # Participants dict desc
 # # "id": 102475,
