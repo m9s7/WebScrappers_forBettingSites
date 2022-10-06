@@ -1,16 +1,17 @@
-# This is a sample Python script.
+from fuzzywuzzy import process, fuzz
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from maxbet_scraper import scrape as scrape_maxbet
+from mozzart_scraper import scrape as scrape_mozzart
 
+print(fuzz.ratio('Van De Zandschulp B.', 'Van De Zands. B.'))
+print(fuzz.partial_ratio('Van De Zandschulp B.', 'Van De Zands. B.'))
+print(fuzz.token_sort_ratio('Van De Zandschulp B.', 'Van De Zands. B.'))
+print(fuzz.WRatio('Van De Zandschulp B.', 'Van De Zands. B.'))
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+maxb = scrape_maxbet()
+mozz = scrape_mozzart()
 
+print(maxb)
+print(mozz)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# TODO: Merge and compare dataframes with fuzz

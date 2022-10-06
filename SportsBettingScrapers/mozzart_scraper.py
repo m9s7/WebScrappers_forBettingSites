@@ -1,13 +1,22 @@
 # don't need cookies for mozart
 import sys
+import pandas as pd
 
-from models.match_model import Match, Participant, Subgame
+from models.match_model import Subgames
 from requests_to_server.mozzart_requests import get_curr_sidebar_sports_and_leagues, get_all_subgames, get_match_ids, \
     get_odds
 
 
+def print_to_file(data):
+    original_stdout = sys.stdout
+    with open('mozz_tennis.txt', 'w', encoding="utf-8") as f:
+        sys.stdout = f
+        print(data)
+        sys.stdout = original_stdout
+
+
 # Get a specific "sport" that is currently offered
-def get_sport_with_name(name):
+def get_sport_with_name(name, sidebar_sports):
     for sport in sidebar_sports:
         if sport['name'] == name:
             # Can return list of ( sportId, sportName ) pairs, because IDs are needed to get subgames
@@ -51,56 +60,56 @@ def get_focused_subgames_for_sport_id(sport_id):
     return focused_subgames
 
 
-sidebar_sports = get_curr_sidebar_sports_and_leagues().json()
+def scrape():
+    sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues().json()
 
-# Košarka nema kodds?
-# Limit yourself to tennis
-tennis = get_sport_with_name("Tenis")
-if tennis is None:
-    print("Send email")
-    exit(1)
-tennisID = tennis['id']
+    # Košarka nema kodds?
+    # Limit yourself to tennis
+    tennis = get_sport_with_name("Tenis", sidebar_sports_response_json)
+    if tennis is None:
+        print("Send email")
+        exit(1)
+    tennis_id = tennis['id']
 
-# Get subgameIds za "Konacan ishod"
-subgames = get_focused_subgames_for_sport_id(tennisID)
-# print(subgames)
+    # Get subgameIds za "Konacan ishod"
+    subgames = get_focused_subgames_for_sport_id(tennis_id)
 
+    # Get matches and participants
+    matches_response = get_match_ids(tennis_id).json()['matches']
 
-# Get matches and participants
-matches_response = get_match_ids(tennisID).json()['matches']
-matches = {}
-for match in matches_response:
-    if match['specialType'] != 0:
-        continue
+    # Parse matches
+    export = {}
+    for match in matches_response:
+        if match['specialType'] != 0:
+            continue
+        e = [match['participants'][0]['name'], match['participants'][1]['name'], None, None]
+        export[match['id']] = e
 
-    m = Match(match['id'], match['startTime'])
-    for p in match['participants']:
-        m.participants.append(Participant(p['id'], p['name']))
-    matches[match['id']] = m
-    # print(m)
+    # For testing with Insomnia
+    # print(list(export.keys())[1:10], " - ", subgames)
 
+    # Get odds for chosen matches and subgames
+    odds = get_odds(list(export.keys()), subgames).json()
 
-# Get odds for chosen matches and subgames
-odds = get_odds(list(matches.keys()), subgames).json()
-for o in odds:
-    for sg in o['kodds'].values():
-        s = Subgame(
-            game_name=sg['subGame']['gameName'],
-            game_shortname=sg['subGame']['gameShortName'],
-            subgame_name=sg['subGame']['subGameName'],
-            subgame_description=sg['subGame']['subGameDescription'],
-            value=sg['value']
-        )
-        # print(s)
-        matches[o['id']].subgames.append(s)
+    # Parse odds
+    for o in odds:
+        match_id = o['id']
+        for sg in o['kodds'].values():
 
-# # Print results
-# for m in matches.values():
-#     print(m)
+            # Konacan ishod
+            if sg['subGame']['gameShortName'] == 'ki':
+                if sg['subGame']['subGameName'] == '1':
+                    export[match_id][Subgames.KI_1] = sg['value']
+                elif sg['subGame']['subGameName'] == '2':
+                    export[match_id][Subgames.KI_2] = sg['value']
+                else:
+                    continue
 
-original_stdout = sys.stdout
-with open('mozz_tennis.txt', 'w', encoding="utf-8") as f:
-    sys.stdout = f
-    for m in matches.values():
-        print(m)
-    sys.stdout = original_stdout
+    # Format result
+    columns = ['1', '2', 'KI_1', 'KI_2']
+    index = list(export.keys())
+
+    df = pd.DataFrame(list(export.values()), columns=columns, index=index)
+
+    print(df.to_string())
+    return df

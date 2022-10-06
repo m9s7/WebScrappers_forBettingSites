@@ -1,8 +1,9 @@
 import sys
+import pandas as pd
 
 from playwright.sync_api import sync_playwright
 
-from models.match_model import Match, Participant, Subgame
+from models.match_model import Subgames
 from requests_to_server.maxbet_requests import get_sport_data, get_curr_sidebar_sports_and_leagues
 
 
@@ -38,70 +39,60 @@ def parse_sidebar_sports(sidebar_sports_json):
     return sports
 
 
-cookie = get_cookie_playwright()
-response = get_curr_sidebar_sports_and_leagues(cookie).json()
+def parse_sport_data(response_json):
+    export = {}
+    for league in response_json:
+        for match in league['matchList']:
+            e = [match['home'], match['away'], None, None]
+            for i in match['odBetPickGroups']:
+                for j in i['tipTypes']:
+                    if j['tipType'] == "KI_1":
+                        e[Subgames.KI_1] = j['value']
+                    elif j['tipType'] == "KI_2":
+                        e[Subgames.KI_2] = j['value']
+                    else:
+                        continue
+            export[match['id']] = e
 
-# parsed sidebar_sports is a list of dictionaries
-# {
-#     "name": string,                   # Sport name
-#     "leagues": [(string, int)]        # list of pairs < League_name, League ID >
-# }
-sidebar_sports = parse_sidebar_sports(response)
+    columns = ['1', '2', 'KI_1', 'KI_2']
+    index = list(export.keys())
 
-# Get data for every sport
+    df = pd.DataFrame(list(export.values()), columns=columns, index=index)
 
-# for sport in sports:
-#     # print(sport['name'])
-#     res_json = get_sport_data(sport, cookie).json()
+    print(df.to_string())
+    return df
 
-# basket id = 4
-tenisID = 6
 
-res_json = get_sport_data(sidebar_sports[tenisID], cookie).json()
+def print_to_file(data):
+    original_stdout = sys.stdout
+    with open('maxb_tennis.txt', 'w', encoding="utf-8") as f:
+        sys.stdout = f
+        print(data)
+        sys.stdout = original_stdout
 
-# class Match:
-#     def __init__(self, match_id, start_time, participants=None, subgames=None):
 
-matches = {}
-for league in res_json:
-    # print("LEAGUE NAME: ", league['name'])
-    # print("matchList length: ", len(league['matchList']))
-    for match in league['matchList']:
-        # print(match['id'])
-        m = Match(
-            match_id=match['id'],
-            start_time=match['kickOffTime'],
-            participants=[
-                Participant(match['homeId'], match['home']),
-                Participant(match['awayId'], match['away'])
-            ]
-        )
-        # print('HOME: ', match['home'], " - vs - ", "AWAY: ", match['away'])
-        # print(match['kickOffTime'], " is ", match['kickOffTimeString'])
-        for i in match['odBetPickGroups']:
-            for j in i['tipTypes']:
-                # maybe j['value'] != 0 is bad
-                if j['value'] != 0 and (j['tipType']).startswith("KI_"):
-                    s = Subgame(
-                        game_name=i['name'],
-                        game_shortname=j['tipType'],
-                        subgame_name=j['name'],
-                        subgame_description=j['description'],
-                        value=j['value']
-                    )
-                    m.subgames.append(s)
-                    # print(i['name'])
-                    # print(j['tipType'], " -  ", j['name'], " - ", j['value'])
-        matches[match['id']] = m
-        # print(m)
+def scrape():
+    cookie = get_cookie_playwright()
+    sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues(cookie).json()
 
-# # Print results
-# for m in matches.values():
-#     print(m)
+    # parsed sidebar_sports is a list of dictionaries
+    # {
+    #     "name": string,                   # Sport name
+    #     "leagues": [(string, int)]        # list of pairs < League_name, League ID >
+    # }
+    sidebar_sports = parse_sidebar_sports(sidebar_sports_response_json)
 
-original_stdout = sys.stdout
-with open('maxb_tennis.txt', 'w', encoding="utf-8") as f:
-    sys.stdout = f
-    for m in matches.values():
-        print(m)
-    sys.stdout = original_stdout
+    # Get data for every sport
+
+    # for sport in sports:
+    #     # print(sport['name'])
+    #     res_json = get_sport_data(sport, cookie).json()
+
+    # basket id = 4
+    tenis_id = 6
+
+    sport_data_response_json = get_sport_data(sidebar_sports[tenis_id], cookie).json()
+
+    result = parse_sport_data(sport_data_response_json)
+
+    return result
