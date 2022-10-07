@@ -20,7 +20,7 @@ def get_sport_with_name(name, sidebar_sports):
     for sport in sidebar_sports:
         if sport['name'] == name:
             # Can return list of ( sportId, sportName ) pairs, because IDs are needed to get subgames
-            print(name, " id: ", sport['id'])
+            # print(name, " id: ", sport['id'])
             return sport
     return None
 
@@ -109,7 +109,9 @@ def scrape():
     columns = ['1', '2', 'KI_1', 'KI_2']
     index = list(export.keys())
 
-    df = pd.DataFrame(list(export.values()), columns=columns, index=index)
+    # , index = index
+    df = pd.DataFrame(list(export.values()), columns=columns)
 
-    print(df.to_string())
+    # print(df.to_string())
+    print_to_file(df.to_string())
     return df

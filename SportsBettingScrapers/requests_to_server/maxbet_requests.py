@@ -77,6 +77,7 @@ def get_curr_sidebar_sports_and_leagues(session_cookie):
 def get_sport_data(sport_dict, session_cookie):
     request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
     token = '#'.join([str(pair[1]) for pair in sport_dict['leagues']])
+    # ako je u imenu liga "Max Bonus Tip" ne treba da se ubacuje ta liga
     query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
     header = {
         "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}

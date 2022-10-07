@@ -31,6 +31,8 @@ def parse_sidebar_sports(sidebar_sports_json):
             'leagues': [],
         }
         for league_dict in sport['leagues']:
+            if str(league_dict['name']).startswith("Max Bonus Tip"):
+                continue
             my_sport['leagues'].append((league_dict['name'], league_dict['betLeagueId']))
 
         if len(my_sport['leagues']) != 0:
@@ -57,9 +59,10 @@ def parse_sport_data(response_json):
     columns = ['1', '2', 'KI_1', 'KI_2']
     index = list(export.keys())
 
-    df = pd.DataFrame(list(export.values()), columns=columns, index=index)
+    # , index = index
+    df = pd.DataFrame(list(export.values()), columns=columns)
 
-    print(df.to_string())
+    # print(df.to_string())
     return df
 
 
@@ -82,17 +85,17 @@ def scrape():
     # }
     sidebar_sports = parse_sidebar_sports(sidebar_sports_response_json)
 
-    # Get data for every sport
+    # Get data for every sport or just IDs for every sport
 
-    # for sport in sports:
-    #     # print(sport['name'])
-    #     res_json = get_sport_data(sport, cookie).json()
+    sport_ids = {}
+    for i, sport in enumerate(sidebar_sports):
+        # print(f"{i}: ", sport['name'])
+        sport_ids[sport['name']] = i
+        # res_json = get_sport_data(sport, cookie).json()
 
-    # basket id = 4
-    tenis_id = 6
-
-    sport_data_response_json = get_sport_data(sidebar_sports[tenis_id], cookie).json()
+    sport_data_response_json = get_sport_data(sidebar_sports[sport_ids['Tenis']], cookie).json()
 
     result = parse_sport_data(sport_data_response_json)
 
+    print_to_file(result.to_string())
     return result
