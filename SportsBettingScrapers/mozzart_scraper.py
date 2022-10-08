@@ -9,7 +9,7 @@ from requests_to_server.mozzart_requests import get_curr_sidebar_sports_and_leag
 
 def print_to_file(data):
     original_stdout = sys.stdout
-    with open('mozz_tennis.txt', 'w', encoding="utf-8") as f:
+    with open('output/mozz_tennis.txt', 'w', encoding="utf-8") as f:
         sys.stdout = f
         print(data)
         sys.stdout = original_stdout
@@ -115,3 +115,5 @@ def scrape():
     # print(df.to_string())
     print_to_file(df.to_string())
     return df
+
+# TODO: Promeni da se cookie ucitava iz nekog file-a i onda ako dobijes neki error da nmz sa tim, onda generises novi, brze je

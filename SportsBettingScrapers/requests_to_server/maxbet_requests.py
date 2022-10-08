@@ -17,11 +17,12 @@ import requests as r
 # # irrelevant league attr:
 # # flagId, leagueType, prepaymentDisabled, sortValue, sportName, imatchCBL,blocked, single, orderNumber, favorite, active, sport, description
 #
-def get_curr_sidebar_sports_and_leagues(session_cookie):
+def get_curr_sidebar_sports_and_leagues():
     url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
     querystring = {"v": "4.48.18", "locale": "sr"}
+    # add SESSION = {session_cookie}; to header, if cookies ever become necessary
     headers = {
-        "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
+        "cookie": "org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
 
     response = r.request("GET", url, headers=headers, params=querystring)
 
@@ -74,13 +75,13 @@ def get_curr_sidebar_sports_and_leagues(session_cookie):
 # # "caption": "1",
 # # irrelevant: tipTypeId, tipTypeTag, mainType
 #
-def get_sport_data(sport_dict, session_cookie):
+def get_sport_data(sport_dict):
     request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
     token = '#'.join([str(pair[1]) for pair in sport_dict['leagues']])
-    # ako je u imenu liga "Max Bonus Tip" ne treba da se ubacuje ta liga
     query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
+    # add SESSION = {session_cookie}; to header, if cookies ever become necessary
     header = {
-        "cookie": f"SESSION={session_cookie}; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
+        "cookie": "org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
 
     sport_data_response = r.request("GET", request_url, headers=header, params=query)
 

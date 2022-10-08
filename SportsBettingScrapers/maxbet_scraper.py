@@ -1,25 +1,8 @@
 import sys
 import pandas as pd
 
-from playwright.sync_api import sync_playwright
-
 from models.match_model import Subgames
 from requests_to_server.maxbet_requests import get_sport_data, get_curr_sidebar_sports_and_leagues
-
-
-def get_cookie_playwright():
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        context = browser.new_context()
-        page = context.new_page()
-        page.goto("https://www.maxbet.rs/", timeout=0)
-        # page.click("button-2-style cookie-notification-button  ng-binding")
-
-        cookies = context.cookies()
-        cookie_for_requests = next(c['value'] for c in cookies if c['name'] == 'SESSION')
-
-        browser.close()
-    return cookie_for_requests
 
 
 def parse_sidebar_sports(sidebar_sports_json):
@@ -57,8 +40,8 @@ def parse_sport_data(response_json):
             export[match['id']] = e
 
     columns = ['1', '2', 'KI_1', 'KI_2']
-    index = list(export.keys())
 
+    # index = list(export.keys())
     # , index = index
     df = pd.DataFrame(list(export.values()), columns=columns)
 
@@ -68,15 +51,14 @@ def parse_sport_data(response_json):
 
 def print_to_file(data):
     original_stdout = sys.stdout
-    with open('maxb_tennis.txt', 'w', encoding="utf-8") as f:
+    with open('output/maxb_tennis.txt', 'w', encoding="utf-8") as f:
         sys.stdout = f
         print(data)
         sys.stdout = original_stdout
 
 
 def scrape():
-    cookie = get_cookie_playwright()
-    sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues(cookie).json()
+    sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues().json()
 
     # parsed sidebar_sports is a list of dictionaries
     # {
@@ -93,7 +75,7 @@ def scrape():
         sport_ids[sport['name']] = i
         # res_json = get_sport_data(sport, cookie).json()
 
-    sport_data_response_json = get_sport_data(sidebar_sports[sport_ids['Tenis']], cookie).json()
+    sport_data_response_json = get_sport_data(sidebar_sports[sport_ids['Tenis']]).json()
 
     result = parse_sport_data(sport_data_response_json)
 
