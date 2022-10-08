@@ -6,6 +6,9 @@ from mozzart_scraper import scrape as scrape_mozzart
 
 
 def merge_records(maxbet, mozzart):
+
+    print("... merging scraped data")
+
     # order books based by num of records
     bookies_ordered = {}
     if len(maxbet.index) > len(mozzart.index):
@@ -49,23 +52,48 @@ def merge_records(maxbet, mozzart):
         if not merged_record:
             merged_record = [i['1'], i['2'], i['KI_1'], None, i['KI_2'], None]
 
+        # turn strings to numbers
+        # print()
+
         records_to_keep.append(merged_record)
 
-    print('--------------------')
-    print(successful_matches)
     print(f"{bookies_ordered['1']}: ", len(bookie1.index))
     print(f"{bookies_ordered['2']}: ", len(bookie2.index))
+    print("Successfully merged: ", successful_matches, " records")
 
     merged_records = pd.DataFrame(records_to_keep, columns=columns)
 
     return merged_records
 
 
+def find_arb(records):
+
+    print("...finding arbitrage opportunities\n-------------------------")
+
+    preprocessed_rec = records.astype(
+        {'KI_1_maxb': 'float', 'KI_1_mozz': 'float', 'KI_2_maxb': 'float', 'KI_2_mozz': 'float'}).fillna(0.0)
+    preprocessed_rec['KI_1_MAX'] = preprocessed_rec[['KI_1_mozz', 'KI_1_maxb']].values.max(1)
+    preprocessed_rec['KI_2_MAX'] = preprocessed_rec[['KI_2_mozz', 'KI_2_maxb']].values.max(1)
+
+    preprocessed_rec['outlay'] = preprocessed_rec['KI_1_MAX'].apply(lambda x: 100 / x) + preprocessed_rec[
+        'KI_2_MAX'].apply(lambda x: 100 / x)
+
+    if (preprocessed_rec.loc[preprocessed_rec['outlay'] <= 100.0]).empty:
+        print("No arbitrage opportunities")
+        return None
+    else:
+        print('OMG is this real life')
+        return preprocessed_rec
+
+
 maxb = scrape_maxbet()
 mozz = scrape_mozzart()
 
 merged = merge_records(maxb, mozz)
-print(merged.to_string())
 
-# TODO: Compare dataframe values to find arbitrage opportunities
-# sad kad hoces da poredis uradis remove if none za record
+find_arb(merged)
+
+# TODO: scrape more data
+# TODO: parallelize scraping
+# TODO: send emails if you find anything
+# TODO: set it to run nonstop

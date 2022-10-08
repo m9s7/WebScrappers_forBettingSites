@@ -58,6 +58,8 @@ def print_to_file(data):
 
 
 def scrape():
+    print("...scraping maxbet")
+
     sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues().json()
 
     # parsed sidebar_sports is a list of dictionaries

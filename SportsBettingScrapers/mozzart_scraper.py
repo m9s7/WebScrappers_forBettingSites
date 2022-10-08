@@ -43,7 +43,7 @@ def get_focused_subgames_for_sport_id(sport_id):
 
         for header in offer['regularHeaders']:
             if len(header['gameName']) != 1:
-                print("KONACNO SMO NASLI ODSTUPANJE OD OVE GLUPE STRUKTURE")
+                print("FINALLY FOUND AN INCONSISTENCY IN MOZZART DATA STRUCTURE")
                 exit(1)
             game = header['gameName'][0]
             # game_id = game['id']
@@ -61,17 +61,19 @@ def get_focused_subgames_for_sport_id(sport_id):
 
 
 def scrape():
+    print("...scraping mozz")
+
     sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues().json()
 
-    # Košarka nema kodds?
-    # Limit yourself to tennis
+    # Košarka doesn't have kodds?
+    # Limit yourself to tennis for now
     tennis = get_sport_with_name("Tenis", sidebar_sports_response_json)
     if tennis is None:
         print("Send email")
         exit(1)
     tennis_id = tennis['id']
 
-    # Get subgameIds za "Konacan ishod"
+    # Get subgameIds za "Konačan ishod"
     subgames = get_focused_subgames_for_sport_id(tennis_id)
 
     # Get matches and participants
@@ -96,7 +98,7 @@ def scrape():
         match_id = o['id']
         for sg in o['kodds'].values():
 
-            # Konacan ishod
+            # Konačan ishod
             if sg['subGame']['gameShortName'] == 'ki':
                 if sg['subGame']['subGameName'] == '1':
                     export[match_id][Subgames.KI_1] = sg['value']
@@ -107,13 +109,11 @@ def scrape():
 
     # Format result
     columns = ['1', '2', 'KI_1', 'KI_2']
-    index = list(export.keys())
 
+    # index = list(export.keys())
     # , index = index
     df = pd.DataFrame(list(export.values()), columns=columns)
 
     # print(df.to_string())
     print_to_file(df.to_string())
     return df
-
-# TODO: Promeni da se cookie ucitava iz nekog file-a i onda ako dobijes neki error da nmz sa tim, onda generises novi, brze je
