@@ -67,7 +67,7 @@ def get_curr_sidebar_sports_and_leagues():
 # # ex.
 # # Sport = Football (id = 1)
 # #   subgameSet = "Kompletna ponuda" (id = 5ada3fc8df923343c250512b, spec for football)
-# #       header
+# #       [header]
 # #           game = "Konačan ishod" (id = -776604)
 # #           subgame = "X" (id = 1001001002)
 # #

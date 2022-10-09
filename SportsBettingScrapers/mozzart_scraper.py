@@ -1,18 +1,10 @@
 # don't need cookies for mozart
-import sys
 import pandas as pd
 
+from models.common_functions import print_to_file
 from models.match_model import Subgames
 from requests_to_server.mozzart_requests import get_curr_sidebar_sports_and_leagues, get_all_subgames, get_match_ids, \
     get_odds
-
-
-def print_to_file(data):
-    original_stdout = sys.stdout
-    with open('output/mozz_tennis.txt', 'w', encoding="utf-8") as f:
-        sys.stdout = f
-        print(data)
-        sys.stdout = original_stdout
 
 
 # Get a specific "sport" that is currently offered
@@ -26,36 +18,32 @@ def get_sport_with_name(name, sidebar_sports):
 
 
 # Focused subgames are subgames I plan on comparing with other betting sites
-def get_focused_subgames_for_sport_id(sport_id):
-    all_subgames_dictionary = get_all_subgames().json()
-    # Format:
-    # all_subgames_dictionary is a map where keys are ordered integers [1..77]
-    # and values are lists which contain subgame dictionaries
-
-    offer_list = all_subgames_dictionary[str(sport_id)]
+def get_focused_subgames(offers, sport_name):
     focused_subgames = []
 
-    for offer in offer_list:
+    for offer in offers:
+        # Maybe switch to 'Kompletna ponuda' because there is everything there but idk
         if offer['name'] != "Konačan ishod":
             continue
-        # offer_id = offer['id']
-        # print("Offer name ", offer['name'])
 
         for header in offer['regularHeaders']:
             if len(header['gameName']) != 1:
                 print("FINALLY FOUND AN INCONSISTENCY IN MOZZART DATA STRUCTURE")
                 exit(1)
             game = header['gameName'][0]
-            # game_id = game['id']
             short_name = game['shortName']
-            if short_name != 'ki':
-                continue
-            for subgame in header['subGameName']:
-                subgame_id = subgame['id']
-                focused_subgames.append(subgame_id)
-                # subgame_name = subgame['name']
-                # subgame_desc = subgame['description']
-                # print(subgame_id, " - ", subgame_name, " (", subgame_desc, ")")
+
+            if sport_name == "Tenis":
+                if short_name != 'ki':
+                    continue
+                for subgame in header['subGameName']:
+                    focused_subgames.append(subgame['id'])
+
+            if sport_name == "Košarka":
+                if short_name != 'pobm':
+                    continue
+                for subgame in header['subGameName']:
+                    focused_subgames.append(subgame['id'])
 
     return focused_subgames
 
@@ -63,57 +51,77 @@ def get_focused_subgames_for_sport_id(sport_id):
 def scrape():
     print("...scraping mozz")
 
+    columns = ['1', '2', 'KI_1', 'KI_2']
+    dfs = pd.DataFrame(columns=['1', '2', 'KI_1', 'KI_2'])
+
     sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues().json()
 
-    # Košarka doesn't have kodds?
-    # Limit yourself to tennis for now
-    tennis = get_sport_with_name("Tenis", sidebar_sports_response_json)
-    if tennis is None:
-        print("Send email")
-        exit(1)
-    tennis_id = tennis['id']
+    all_subgames_dictionary = get_all_subgames().json()
+    # Format:
+    # all_subgames_dictionary is a map where keys are ordered integers [1..77]
+    # and values are lists which contain subgame dictionaries
 
-    # Get subgameIds za "Konačan ishod"
-    subgames = get_focused_subgames_for_sport_id(tennis_id)
+    # Get sports you are interested in
 
-    # Get matches and participants
-    matches_response = get_match_ids(tennis_id).json()['matches']
+    sport_names = ["Tenis", "Košarka"]
+    interested_subgames = {
+        "Tenis": 'ki',
+        "Košarka": 'pobm'
+    }
+    for sport_name in sport_names:
 
-    # Parse matches
-    export = {}
-    for match in matches_response:
-        if match['specialType'] != 0:
-            continue
-        e = [match['participants'][0]['name'], match['participants'][1]['name'], None, None]
-        export[match['id']] = e
+        sport = get_sport_with_name(sport_name, sidebar_sports_response_json)
+        if sport is None:
+            print("Send email")
+            exit(1)
 
-    # For testing with Insomnia
-    # print(list(export.keys())[1:10], " - ", subgames)
+        sport_id = sport['id']
 
-    # Get odds for chosen matches and subgames
-    odds = get_odds(list(export.keys()), subgames).json()
+        # Get subgameIds za "Konačan ishod"
+        offer_list = all_subgames_dictionary[str(sport_id)]
+        subgames = get_focused_subgames(offer_list, sport_name)
 
-    # Parse odds
-    for o in odds:
-        match_id = o['id']
-        for sg in o['kodds'].values():
+        # Get matches and participants
+        matches_response = get_match_ids(sport_id).json()['matches']
 
-            # Konačan ishod
-            if sg['subGame']['gameShortName'] == 'ki':
-                if sg['subGame']['subGameName'] == '1':
-                    export[match_id][Subgames.KI_1] = sg['value']
-                elif sg['subGame']['subGameName'] == '2':
-                    export[match_id][Subgames.KI_2] = sg['value']
-                else:
-                    continue
+        # Parse matches
+        export = {}
+        for match in matches_response:
+            if match['specialType'] != 0 or len(match['participants']) != 2:
+                continue
+            e = [match['participants'][0]['name'], match['participants'][1]['name'], None, None]
+            export[match['id']] = e
 
-    # Format result
-    columns = ['1', '2', 'KI_1', 'KI_2']
+        # For testing with Insomnia
+        # print(list(export.keys())[1:10], " - ", subgames)
 
-    # index = list(export.keys())
-    # , index = index
-    df = pd.DataFrame(list(export.values()), columns=columns)
+        # Get odds for chosen matches and subgames
+        odds = get_odds(list(export.keys()), subgames).json()
 
-    # print(df.to_string())
-    print_to_file(df.to_string())
-    return df
+        for o in odds:
+            if "kodds" not in o:
+                continue
+
+            match_id = o['id']
+            for sg in o['kodds'].values():
+                # Konačan ishod
+                if sg['subGame']['gameShortName'] == interested_subgames[sport_name]:
+                    if sg['subGame']['subGameName'] == '1':
+                        export[match_id][Subgames.FT_OT_1] = sg['value']
+                    elif sg['subGame']['subGameName'] == '2':
+                        export[match_id][Subgames.FT_OT_2] = sg['value']
+                    else:
+                        continue
+
+        # Format result
+        df = pd.DataFrame(list(export.values()), columns=columns)
+        df['sport'] = sport_name
+
+        print_to_file(df.to_string(), f"mozz_{sport_name}.txt")
+        dfs = pd.concat([dfs, df], axis=0)
+
+    # print_to_file(dfs.to_string(), "result.txt")
+    return dfs
+
+    # Maybe returning a dict of Dataframes is better because like this later you have fuzzy string comparisons that are unnecessary
+    # TODO: think about this, add sport name columns or send a list of dataframes

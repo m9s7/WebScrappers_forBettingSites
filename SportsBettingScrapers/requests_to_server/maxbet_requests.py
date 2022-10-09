@@ -1,5 +1,9 @@
 import requests as r
 
+# add SESSION = {session_cookie}; to header, if cookies ever become necessary
+header = {
+    "cookie": "org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
+
 
 # # # Get every "sport" currently offered in the sidebar and all leagues in that "sport"
 # # # there are no parameters
@@ -20,11 +24,8 @@ import requests as r
 def get_curr_sidebar_sports_and_leagues():
     url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
     querystring = {"v": "4.48.18", "locale": "sr"}
-    # add SESSION = {session_cookie}; to header, if cookies ever become necessary
-    headers = {
-        "cookie": "org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
 
-    response = r.request("GET", url, headers=headers, params=querystring)
+    response = r.request("GET", url, headers=header, params=querystring)
 
     return response
 
@@ -79,10 +80,16 @@ def get_sport_data(sport_dict):
     request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
     token = '#'.join([str(pair[1]) for pair in sport_dict['leagues']])
     query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
-    # add SESSION = {session_cookie}; to header, if cookies ever become necessary
-    header = {
-        "cookie": "org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=sr"}
 
     sport_data_response = r.request("GET", request_url, headers=header, params=query)
 
     return sport_data_response
+
+
+def get_match_data(match_id):
+    url = f"https://www.maxbet.rs/ibet/offer/special/undefined/{match_id}.json"
+    querystring = {"v": "4.48.18", "locale": "sr"}
+
+    response = r.request("GET", url, headers=header, params=querystring)
+
+    return response

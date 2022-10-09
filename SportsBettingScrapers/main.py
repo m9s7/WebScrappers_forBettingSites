@@ -2,11 +2,11 @@ import pandas as pd
 from thefuzz import fuzz
 
 from maxbet_scraper import scrape as scrape_maxbet
+from models.common_functions import print_to_file
 from mozzart_scraper import scrape as scrape_mozzart
 
 
 def merge_records(maxbet, mozzart):
-
     print("... merging scraped data")
 
     # order books based by num of records
@@ -67,13 +67,18 @@ def merge_records(maxbet, mozzart):
 
 
 def find_arb(records):
-
     print("...finding arbitrage opportunities\n-------------------------")
 
     preprocessed_rec = records.astype(
         {'KI_1_maxb': 'float', 'KI_1_mozz': 'float', 'KI_2_maxb': 'float', 'KI_2_mozz': 'float'}).fillna(0.0)
+
     preprocessed_rec['KI_1_MAX'] = preprocessed_rec[['KI_1_mozz', 'KI_1_maxb']].values.max(1)
     preprocessed_rec['KI_2_MAX'] = preprocessed_rec[['KI_2_mozz', 'KI_2_maxb']].values.max(1)
+
+    preprocessed_rec = preprocessed_rec[preprocessed_rec.KI_1_MAX != 0]
+    preprocessed_rec = preprocessed_rec[preprocessed_rec.KI_2_MAX != 0]
+
+    print_to_file(preprocessed_rec.to_string(), "result.txt")
 
     preprocessed_rec['outlay'] = preprocessed_rec['KI_1_MAX'].apply(lambda x: 100 / x) + preprocessed_rec[
         'KI_2_MAX'].apply(lambda x: 100 / x)
@@ -94,6 +99,8 @@ merged = merge_records(maxb, mozz)
 find_arb(merged)
 
 # TODO: scrape more data
+# Two-outcome Betting: tennis (DONE), baseball, and basketball (with extra time included)
+# Three-outcome Betting: test cricket and soccer
 # TODO: parallelize scraping
 # TODO: send emails if you find anything
 # TODO: set it to run nonstop
