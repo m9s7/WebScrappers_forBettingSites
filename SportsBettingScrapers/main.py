@@ -7,7 +7,7 @@ from mozzart_scraper import scrape as scrape_mozzart
 
 
 def merge_records(maxbet, mozzart):
-    print("... merging scraped data")
+    print("... merging scraped data\n\n")
 
     # order books based by num of records
     bookies_ordered = {}
@@ -80,27 +80,59 @@ def find_arb(records):
 
     print_to_file(preprocessed_rec.to_string(), "result.txt")
 
-    preprocessed_rec['outlay'] = preprocessed_rec['KI_1_MAX'].apply(lambda x: 100 / x) + preprocessed_rec[
-        'KI_2_MAX'].apply(lambda x: 100 / x)
+    preprocessed_rec['%_bet1'] = preprocessed_rec['KI_1_MAX'].apply(lambda x: 100 / x)
+    preprocessed_rec['%_bet2'] = preprocessed_rec['KI_2_MAX'].apply(lambda x: 100 / x)
+    preprocessed_rec['outlay'] = preprocessed_rec['%_bet1'] + preprocessed_rec['%_bet2']
 
-    if (preprocessed_rec.loc[preprocessed_rec['outlay'] <= 100.0]).empty:
-        print("No arbitrage opportunities")
-        return None
+    print(preprocessed_rec.to_string())
+
+    results = preprocessed_rec.loc[preprocessed_rec['outlay'] <= 100.0]
+    if results.empty:
+        print("No arbitrage opportunities\n")
     else:
-        print('OMG is this real life')
-        return preprocessed_rec
+        print('OMG OMG is this real life\n')
+        print("\n", results.to_string())
+        print_to_file(data=results.to_string(), file="ARBITRAGE.txt", mode='a')
 
+
+def process_arb_opportunities(a, capital):
+    a['stake1'] = a['%_bet1'] * capital
+    a['stake2'] = a['%_bet2'] * capital
+
+    # not like this, but w8 till you find arb opportunity to test it
+    a['ROI'] = (100.0 / a['outlay']) - 1
+
+    print(a)
+
+
+# TODO: Write your own fuzzy matching, where
+# - you split by '/' if its a pair in tennis and then you combine the two scores
+# - value partial matching percentage wise, idk just make it better then what you got currently
+# - or start a database which you fill with your scraping, and automatically have a que of moz_name - maxb_name y/n
 
 maxb = scrape_maxbet()
 mozz = scrape_mozzart()
 
-merged = merge_records(maxb, mozz)
+# print(maxb.keys())
+# print(mozz.keys(), "\n")
 
-find_arb(merged)
+for sport in set(maxb.keys()).intersection(mozz.keys()):
+    find_arb(merge_records(maxb[sport], mozz[sport]))
 
 # TODO: scrape more data
-# Two-outcome Betting: tennis (DONE), baseball, and basketball (with extra time included)
+# Two-outcome Betting:
+# - (DONE) tennis
+# - cricket
+# - baseball
+# - (DONE) basketball with extra time included
+# - (DONE) E-Sport
+# - Football 0-3, 4+ (trazis ug 0-x i ako nadjes onda trazis ug (x+1)+), sve to isto za prvo/drugo poluvreme, 90', tim1/tim2, tim1-prvoPV kombinacije
+# - Hokej pobednik meca ukljucujuci produzetke i penale
 # Three-outcome Betting: test cricket and soccer
+# The I gotta throw myself at handicaps, think of a system because there are is a million of options for them
+# Winner = tie, kvota 1.0, mozda nije lose igrati i to
+
+
 # TODO: parallelize scraping
 # TODO: send emails if you find anything
 # TODO: set it to run nonstop

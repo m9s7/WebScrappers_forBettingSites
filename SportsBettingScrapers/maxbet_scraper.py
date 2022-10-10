@@ -29,19 +29,26 @@ def parse_sidebar(sidebar_sports_json):
     return sports
 
 
-def parse_tennis_data(response_json):
+def parse_ki_data(response_json):
     export = {}
     for league in response_json:
         for match in league['matchList']:
             e = [match['home'], match['away'], None, None]
             for i in match['odBetPickGroups']:
                 for j in i['tipTypes']:
+
+                    # if X exists, match is not 2-outcome
+                    if j['tipType'] == "KI_X" and j['value'] != 0:
+                        e = [match['home'], match['away'], None, None]
+                        break
+
                     if j['tipType'] == "KI_1":
                         e[Subgames.KI_1] = j['value']
                     elif j['tipType'] == "KI_2":
                         e[Subgames.KI_2] = j['value']
                     else:
                         continue
+
             export[match['id']] = e
 
     columns = ['1', '2', 'KI_1', 'KI_2']
@@ -50,7 +57,6 @@ def parse_tennis_data(response_json):
     # , index = index
     df = pd.DataFrame(list(export.values()), columns=columns)
 
-    df['sport'] = "Tennis"
     return df
 
 
@@ -73,13 +79,14 @@ def parse_basketball_data(response_json):
     columns = ['1', '2', 'KI_1', 'KI_2']
 
     df = pd.DataFrame(list(export.values()), columns=columns)
-    df['sport'] = "Basketball"
 
     return df
 
 
 def scrape():
     print("...scraping maxbet")
+
+    results = {}
 
     # Do error checking maybe
     sidebar_sports_and_leagues = parse_sidebar(get_curr_sidebar_sports_and_leagues().json())
@@ -91,15 +98,22 @@ def scrape():
         sport_ids[sport['name']] = i
         # res_json = get_sport_data(sport, cookie).json()
 
+    # Tenis
     tennis_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Tenis']]).json()
-    df_tennis = parse_tennis_data(tennis_data_response_json)
+    df_tennis = parse_ki_data(tennis_data_response_json)
     print_to_file(df_tennis.to_string(), "maxb_tennis.txt")
+    results['Tenis'] = df_tennis
 
+    # eSport
+    esport_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['eSport']]).json()
+    df_esport = parse_ki_data(esport_data_response_json)
+    print_to_file(df_esport.to_string(), "maxb_eSport.txt")
+    results['Esports'] = df_esport
+
+    # Košarka
     basketball_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Košarka']]).json()
     df_basketball = parse_basketball_data(basketball_data_response_json)
     print_to_file(df_basketball.to_string(), "maxb_basketball.txt")
+    results['Košarka'] = df_basketball
 
-    df = pd.concat([df_tennis, df_basketball], axis=0)
-    # print_to_file(df.to_string(), "result.txt")
-
-    return df
+    return results

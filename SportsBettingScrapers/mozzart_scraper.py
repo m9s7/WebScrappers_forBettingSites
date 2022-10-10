@@ -33,7 +33,7 @@ def get_focused_subgames(offers, sport_name):
             game = header['gameName'][0]
             short_name = game['shortName']
 
-            if sport_name == "Tenis":
+            if sport_name == "Tenis" or sport_name == "Esports":
                 if short_name != 'ki':
                     continue
                 for subgame in header['subGameName']:
@@ -52,7 +52,6 @@ def scrape():
     print("...scraping mozz")
 
     columns = ['1', '2', 'KI_1', 'KI_2']
-    dfs = pd.DataFrame(columns=['1', '2', 'KI_1', 'KI_2'])
 
     sidebar_sports_response_json = get_curr_sidebar_sports_and_leagues().json()
 
@@ -61,12 +60,18 @@ def scrape():
     # all_subgames_dictionary is a map where keys are ordered integers [1..77]
     # and values are lists which contain subgame dictionaries
 
+    # See which sports there are
+    # for ss in sidebar_sports_response_json:
+    #     print(ss['name'])
+
     # Get sports you are interested in
 
-    sport_names = ["Tenis", "Košarka"]
+    sport_names = ["Tenis", "Košarka", "Esports"]
+    results = {}
     interested_subgames = {
         "Tenis": 'ki',
-        "Košarka": 'pobm'
+        "Košarka": 'pobm',
+        "Esports": 'ki'
     }
     for sport_name in sport_names:
 
@@ -104,8 +109,19 @@ def scrape():
 
             match_id = o['id']
             for sg in o['kodds'].values():
+                if sg is None:
+                    continue
+
+                # Should have try catch blocks to raise exceptions and not break the program
+                if "subGame" not in sg:
+                    print("WTF")
+                    continue
+
                 # Konačan ishod
                 if sg['subGame']['gameShortName'] == interested_subgames[sport_name]:
+                    if sg['subGame']['subGameName'] == 'x' or sg['subGame']['subGameName'] == 'X':
+                        print("WHAT mozz_scrape")
+
                     if sg['subGame']['subGameName'] == '1':
                         export[match_id][Subgames.FT_OT_1] = sg['value']
                     elif sg['subGame']['subGameName'] == '2':
@@ -115,13 +131,10 @@ def scrape():
 
         # Format result
         df = pd.DataFrame(list(export.values()), columns=columns)
-        df['sport'] = sport_name
-
         print_to_file(df.to_string(), f"mozz_{sport_name}.txt")
-        dfs = pd.concat([dfs, df], axis=0)
+        results[sport_name] = df
 
-    # print_to_file(dfs.to_string(), "result.txt")
-    return dfs
+    return results
 
-    # Maybe returning a dict of Dataframes is better because like this later you have fuzzy string comparisons that are unnecessary
-    # TODO: think about this, add sport name columns or send a list of dataframes
+
+# scrape()
