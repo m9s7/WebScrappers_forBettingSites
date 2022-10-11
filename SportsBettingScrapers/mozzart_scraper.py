@@ -77,8 +77,8 @@ def scrape():
 
         sport = get_sport_with_name(sport_name, sidebar_sports_response_json)
         if sport is None:
-            print("Send email")
-            exit(1)
+            print(f"mozzart: {sport_name} not currently offered")
+            continue
 
         sport_id = sport['id']
 

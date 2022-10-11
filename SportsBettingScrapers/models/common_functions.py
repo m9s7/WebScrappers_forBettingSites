@@ -1,13 +1,20 @@
 import json
+import os
 import sys
 
 
 def print_to_file(data, file, mode='w'):
+
+    old_dir = os.getcwd()
+    os.chdir(r"C:\Users\Matija\PycharmProjects\ScrapeEscape\SportsBettingScrapers\output")
+
     original_stdout = sys.stdout
-    with open(f'output/{file}', mode, encoding="utf-8") as f:
+    with open(file, mode, encoding="utf-8") as f:
         sys.stdout = f
         print(data)
         sys.stdout = original_stdout
+
+    os.chdir(old_dir)
 
 
 def nice_print_json(data_json):

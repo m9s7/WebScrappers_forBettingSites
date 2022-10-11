@@ -1,13 +1,13 @@
 import pandas as pd
 from thefuzz import fuzz
 
-from maxbet_scraper import scrape as scrape_maxbet
+
 from models.common_functions import print_to_file
+from maxbet.scraper import scrape as scrape_maxbet
 from mozzart_scraper import scrape as scrape_mozzart
 
 
 def merge_records(maxbet, mozzart):
-    print("... merging scraped data\n\n")
 
     # order books based by num of records
     bookies_ordered = {}
@@ -59,7 +59,8 @@ def merge_records(maxbet, mozzart):
 
     print(f"{bookies_ordered['1']}: ", len(bookie1.index))
     print(f"{bookies_ordered['2']}: ", len(bookie2.index))
-    print("Successfully merged: ", successful_matches, " records")
+    print("... merging scraped data")
+    print("Successfully merged: ", successful_matches, " records\n")
 
     merged_records = pd.DataFrame(records_to_keep, columns=columns)
 
@@ -84,7 +85,7 @@ def find_arb(records):
     preprocessed_rec['%_bet2'] = preprocessed_rec['KI_2_MAX'].apply(lambda x: 100 / x)
     preprocessed_rec['outlay'] = preprocessed_rec['%_bet1'] + preprocessed_rec['%_bet2']
 
-    print(preprocessed_rec.to_string())
+    # print(preprocessed_rec.to_string())
 
     results = preprocessed_rec.loc[preprocessed_rec['outlay'] <= 100.0]
     if results.empty:
@@ -110,12 +111,14 @@ def process_arb_opportunities(a, capital):
 # - value partial matching percentage wise, idk just make it better then what you got currently
 # - or start a database which you fill with your scraping, and automatically have a que of moz_name - maxb_name y/n
 
+# its scraping for everything where it should only scrape for sports that are offered in both
 maxb = scrape_maxbet()
 mozz = scrape_mozzart()
 
 # print(maxb.keys())
 # print(mozz.keys(), "\n")
 
+print('\n\n')
 for sport in set(maxb.keys()).intersection(mozz.keys()):
     find_arb(merge_records(maxb[sport], mozz[sport]))
 
