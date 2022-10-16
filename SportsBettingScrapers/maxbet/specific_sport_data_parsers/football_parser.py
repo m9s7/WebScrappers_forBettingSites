@@ -2,14 +2,10 @@ import pandas as pd
 
 from requests_to_server.maxbet_requests import get_match_data
 
+# # Added:
 # Ukupno golova 90'
 # Ukupno golova prvo poluvreme
 # Ukupno golova drugo poluvreme
-
-# Winner
-# Winner prvo poluvreme
-# Winner drugo poluvreme
-
 # Domaćin golovi
 # Domaćin golovi prvo poluvreme
 # Domaćin golovi drugo poluvreme
@@ -17,13 +13,10 @@ from requests_to_server.maxbet_requests import get_match_data
 # Gost golovi prvo poluvreme
 # Gost golovi drugo poluvreme
 
-# sta ce se razlikovati medju 90', 1p, 2p, dg, dg1p, dg2p, gg, gg1p, gg2p
-# subgame['name']   ex. "Ukupno golova prvo poluvreme"
-# tip1_prefix       ex. "ug 1P0-"
-# tip2_sufix        ex. "+" a mozda se i nece razlikovati
-# tip1_length
-# tip2_length
-# kad racunas x to mozes da dobijes iz prefix length ili x_index da cuvas
+# # Not yet added:
+# Winner
+# Winner prvo poluvreme
+# Winner drugo poluvreme
 
 golovi_subgames = {
     "Ukupno golova 90'": {
@@ -118,11 +111,7 @@ def parse_football_data(response_json):
                         e = [match['home'], match['away'], tip1, tip1_value, tip2, tip2_value]
                         export.append(e)
 
-            # break
-        # break
-
-    # print(*export, sep='\n')
-
+    # TODO: osmisli kako ovo
     # lose ovako jer ima ponavljanja a to je dodatni poso za fuzzy matching,
     # mozda u mainu da se napravi set parova pa da se dodeljuje match id tako
     # za sad nek ostane

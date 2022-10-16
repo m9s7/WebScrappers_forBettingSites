@@ -4,7 +4,7 @@ from thefuzz import fuzz
 
 from models.common_functions import print_to_file
 from maxbet.scraper import scrape as scrape_maxbet
-from mozzart_scraper import scrape as scrape_mozzart
+from mozzart.mozzart_scraper import scrape as scrape_mozzart
 
 
 def merge_records(maxbet, mozzart):
@@ -139,3 +139,6 @@ for sport in set(maxb.keys()).intersection(mozz.keys()):
 # TODO: parallelize scraping
 # TODO: send emails if you find anything
 # TODO: set it to run nonstop
+
+# TODO: retype whole project in Go language ?? why use python here, how to decide if slow speed is due to language
+# but only do it after you have a minimum viable working product
