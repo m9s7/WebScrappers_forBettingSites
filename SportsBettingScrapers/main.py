@@ -132,11 +132,11 @@ def find_arb(records, capital):
 maxb = scrape_maxbet()
 mozz = scrape_mozzart()
 
-# print(maxb.keys())
-# print(mozz.keys(), "\n")
+print(maxb.keys())
+print(mozz.keys(), "\n")
 
 for sport in set(maxb.keys()).intersection(mozz.keys()):
-    # find_arb(merge_records(maxb[sport], mozz[sport]))
+    print(sport)
     res = find_arb(merge_records(sport, maxb[sport], mozz[sport]), 1000)
 
 # TODO: scrape more data
@@ -154,6 +154,7 @@ for sport in set(maxb.keys()).intersection(mozz.keys()):
 
 
 # TODO: parallelize scraping
+# TODO: parallelize MERGING IN GO
 # TODO: send emails if you find anything
 # TODO: set it to run nonstop
 

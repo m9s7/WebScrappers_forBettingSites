@@ -52,8 +52,8 @@ def scrape_tennis(tennis_id, all_subgames_json):
                     raise AttributeError(
                         f"Mozzart: Two-outcome game with third outcome {game} {subgame} found, value={val}")
 
-        df = pd.DataFrame(list(export.values()),
-                          columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
-        print_to_file(df.to_string(), f"mozz_tennis.txt")
+    df = pd.DataFrame(list(export.values()),
+                      columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
+    print_to_file(df.to_string(), f"mozz_tennis.txt")
 
-        return df
+    return df

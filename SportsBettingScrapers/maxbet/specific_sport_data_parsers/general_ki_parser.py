@@ -7,7 +7,7 @@ def parse_ki_data(response_json):
     export = {}
     for league in response_json:
         for match in league['matchList']:
-            e = [match['home'], match['away'], None, None, None, None]
+            e = [match['home'].strip(), match['away'].strip(), None, None, None, None]
             for i in match['odBetPickGroups']:
                 for j in i['tipTypes']:
 
