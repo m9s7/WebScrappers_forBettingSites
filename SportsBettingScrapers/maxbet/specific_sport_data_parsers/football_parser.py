@@ -67,11 +67,36 @@ golovi_subgames = {
 }
 
 
+def standardize_tip_name(tip):
+    tip = tip.strip()
+    tip_len = len(tip)
+
+    # print('converting', tip, " len = ", len(tip))
+    res = ""
+    if tip.startswith('1') or tip.startswith('2'):
+        res += tip[0]
+        tip = tip[1:]
+
+    if tip.startswith('D'):
+        return res + "tm1 " + tip[1:]
+    elif tip.startswith('G'):
+        return res + "tm2 " + tip[1:]
+
+    if tip.startswith('ug'):
+        if tip_len == 7 and tip[5] == "T":
+            return tip[3] + 'ug 0'
+        elif tip_len == 8 and tip[4] == 'P':
+            return tip[3] + 'ug ' + tip[5:]
+        else:
+            return tip
+
+    raise ValueError("standardize_tip_name encountered unexpected tip")
+
+
 def parse_football_data(response_json):
     export = []
 
     for league in response_json:
-
         for match in league['matchList']:
 
             match_info = get_match_data(match['id']).json()
@@ -89,13 +114,16 @@ def parse_football_data(response_json):
 
                         x = int(tip1[len(s['prefix']) + 2])
 
-                        tip2 = f'{s["prefix"]} {x + 1}+'
+                        tip2 = f'{s["prefix"]}{x + 1}+'
+                        # print(tip1, tip2)
                         if tip2 not in tips:
                             continue
 
                         tip1_value = subgame['tipTypes'][tips.index(tip1)]['value']
                         tip2_value = subgame['tipTypes'][tips.index(tip2)]['value']
-                        e = [match['home'], match['away'], tip1, tip1_value, tip2, tip2_value]
+                        e = [match['home'], match['away'], standardize_tip_name(tip1), tip1_value, standardize_tip_name(tip2), tip2_value]
+                        # print(standardize_tip_name(tip1))
+                        # print(standardize_tip_name(tip2))
                         export.append(e)
 
                     # Process T0 and 1+ combo
@@ -108,14 +136,16 @@ def parse_football_data(response_json):
                             continue
                         tip2_value = subgame['tipTypes'][tips.index(tip2)]['value']
 
-                        e = [match['home'], match['away'], tip1, tip1_value, tip2, tip2_value]
+                        # napravi neko preslikavanje maxbet_tip -> universal_tip, tip description
+                        e = [match['home'], match['away'], standardize_tip_name(tip1), tip1_value, standardize_tip_name(tip2), tip2_value]
+                        # print(standardize_tip_name(tip1))
+                        # print(standardize_tip_name(tip2))
                         export.append(e)
-
+        # break
     # TODO: osmisli kako ovo
     # lose ovako jer ima ponavljanja a to je dodatni poso za fuzzy matching,
     # mozda u mainu da se napravi set parova pa da se dodeljuje match id tako
     # za sad nek ostane
-    columns = ['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val']
 
-    df = pd.DataFrame(export, columns=columns)
+    df = pd.DataFrame(export, columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
     return df

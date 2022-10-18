@@ -1,7 +1,7 @@
 import pandas as pd
 
 from models.common_functions import print_to_file
-from models.match_model import MozzNames, Subgames
+from models.match_model import MozzNames, ExportIDX
 from mozzart.helper_functions import init_export_with_matches
 from mozzart.subgames_parsers.two_outcome_ki_subgame_parser import get_2_outcome_subgames
 from requests_to_server.mozzart_requests import get_match_ids, get_odds
@@ -32,16 +32,22 @@ def scrape_basketball(basketball_id, all_subgames_json):
                 raise KeyError("kodds instance doesn't have subgame field ??")
 
             # Konačan ishod
-            if sg['subGame']['gameShortName'] == 'pobm':
-                if sg['subGame']['subGameName'] == '1':
-                    export[match_id][Subgames.KI_1] = sg['value']
-                elif sg['subGame']['subGameName'] == '2':
-                    export[match_id][Subgames.KI_2] = sg['value']
+            game = sg['subGame']['gameShortName']
+            subgame = sg['subGame']['subGameName']
+            val = sg['value']
+
+            if game == 'pobm':
+                if subgame == '1':
+                    export[match_id][ExportIDX.TIP1_NAME] = ' '.join([game, subgame])
+                    export[match_id][ExportIDX.TIP1_VAL] = val
+                elif subgame == '2':
+                    export[match_id][ExportIDX.TIP2_NAME] = ' '.join([game, subgame])
+                    export[match_id][ExportIDX.TIP2_VAL] = val
                 else:
                     raise AttributeError(
-                        f"Mozzart: Two-outcome game with third outcome {sg['subGame']['subGameName']} found, value={sg['value']}")
+                        f"Mozzart: Two-outcome game with third outcome {game} {subgame} found, value={val}")
 
-    df = pd.DataFrame(list(export.values()), columns=['1', '2', 'KI_1', 'KI_2'])
+    df = pd.DataFrame(list(export.values()), columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
     print_to_file(df.to_string(), f"mozz_basketball.txt")
 
     return df

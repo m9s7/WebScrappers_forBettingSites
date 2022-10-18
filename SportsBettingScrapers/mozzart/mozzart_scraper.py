@@ -1,14 +1,18 @@
+import time
+
 from models.match_model import MozzNames
 
 from mozzart.basketball.scraper import scrape_basketball
 from mozzart.esports.scraper import scrape_esports
 from mozzart.helper_functions import parse_sidebar
+from mozzart.soccer.scraper import scrape_soccer
 from mozzart.tennis.scraper import scrape_tennis
 
 from requests_to_server.mozzart_requests import get_curr_sidebar_sports_and_leagues, get_all_subgames
 
 
 def scrape():
+    start_time = time.time()
     print("...scraping mozz")
 
     mozz_id_name_dict = parse_sidebar(get_curr_sidebar_sports_and_leagues().json())
@@ -25,9 +29,11 @@ def scrape():
     results = {
         MozzNames.tennis: scrape_tennis(mozz_id_name_dict[MozzNames.tennis], all_subgames_json),
         MozzNames.esports: scrape_esports(mozz_id_name_dict[MozzNames.esports], all_subgames_json),
-        MozzNames.basketball: scrape_basketball(mozz_id_name_dict[MozzNames.basketball], all_subgames_json)
+        MozzNames.basketball: scrape_basketball(mozz_id_name_dict[MozzNames.basketball], all_subgames_json),
+        MozzNames.soccer: scrape_soccer(mozz_id_name_dict[MozzNames.soccer], all_subgames_json)
     }
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     return results
 
 

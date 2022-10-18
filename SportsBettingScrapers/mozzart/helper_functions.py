@@ -11,7 +11,7 @@ def init_export_with_matches(matches_response):
     for match in matches_response:
         if match['specialType'] != 0 or len(match['participants']) != 2:
             continue
-        e = [match['participants'][0]['name'], match['participants'][1]['name'], None, None]
+        e = [match['participants'][0]['name'], match['participants'][1]['name'], None, None, None, None]
         export[match['id']] = e
 
     return export

@@ -1,3 +1,5 @@
+import time
+
 from maxbet.specific_sport_data_parsers.basketball_parser import parse_basketball_data
 from maxbet.specific_sport_data_parsers.football_parser import parse_football_data
 from maxbet.specific_sport_data_parsers.general_ki_parser import parse_ki_data
@@ -29,6 +31,7 @@ def parse_sidebar(sidebar_sports_json):
 
 
 def scrape():
+    start_time = time.time()
     print("...scraping maxbet")
 
     results = {}
@@ -63,11 +66,13 @@ def scrape():
         print_to_file(df_basketball.to_string(), "maxb_basketball.txt")
         results['Košarka'] = df_basketball
 
-    # if 'Fudbal' in sport_ids:
-    #     football_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Fudbal']]).json()
-    #     df_football = parse_football_data(football_data_response_json)
-    #     print_to_file(df_football.to_string(), "maxb_football.txt")
+    if 'Fudbal' in sport_ids:
+        football_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Fudbal']]).json()
+        df_football = parse_football_data(football_data_response_json)
+        print_to_file(df_football.to_string(), "maxb_football.txt")
+        results['Fudbal'] = df_football
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     return results
 
 
