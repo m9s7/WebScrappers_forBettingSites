@@ -18,7 +18,7 @@ def scrape_basketball(basketball_id, all_subgames_json):
     # print(esports_id)
     # print(list(export.keys())[1:10], " - ", subgames)
 
-    odds = get_odds(list(export.keys()), subgames).json()
+    odds = get_odds(list(export.keys()), subgames)
     for o in odds:
         if "kodds" not in o:
             continue
@@ -48,6 +48,4 @@ def scrape_basketball(basketball_id, all_subgames_json):
                         f"Mozzart: Two-outcome game with third outcome {game} {subgame} found, value={val}")
 
     df = pd.DataFrame(list(export.values()), columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
-    print_to_file(df.to_string(), f"mozz_basketball.txt")
-
     return df

@@ -3,7 +3,8 @@ import time
 from maxbet.specific_sport_data_parsers.basketball_parser import parse_basketball_data
 from maxbet.specific_sport_data_parsers.football_parser import parse_football_data
 from maxbet.specific_sport_data_parsers.general_ki_parser import parse_ki_data
-from models.common_functions import print_to_file
+from models.common_functions import print_to_file, export_for_merge
+from models.match_model import StandardNames, MaxbNames
 from requests_to_server.maxbet_requests import get_sport_data, get_curr_sidebar_sports_and_leagues
 
 
@@ -48,29 +49,37 @@ def scrape():
 
     # print(sport_ids.keys())
 
+    print("...scraping maxb - tennis")
     if 'Tenis' in sport_ids:
-        tennis_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Tenis']]).json()
+        tennis_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids[MaxbNames.tennis]]).json()
         df_tennis = parse_ki_data(tennis_data_response_json)
         print_to_file(df_tennis.to_string(), "maxb_tennis.txt")
-        results['Tenis'] = df_tennis
+        export_for_merge(df_tennis, "maxb_tennis.txt")
+        results[StandardNames.tennis] = df_tennis
 
+    print("...scraping maxb - esports")
     if 'eSport' in sport_ids:
-        esport_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['eSport']]).json()
+        esport_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids[MaxbNames.esports]]).json()
         df_esport = parse_ki_data(esport_data_response_json)
-        print_to_file(df_esport.to_string(), "maxb_eSport.txt")
-        results['Esports'] = df_esport
+        print_to_file(df_esport.to_string(), "maxb_esports.txt")
+        export_for_merge(df_esport, "maxb_esports.txt")
+        results[StandardNames.esports] = df_esport
 
+    print("...scraping maxb - košarka")
     if 'Košarka' in sport_ids:
-        basketball_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Košarka']]).json()
+        basketball_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids[MaxbNames.basketball]]).json()
         df_basketball = parse_basketball_data(basketball_data_response_json)
         print_to_file(df_basketball.to_string(), "maxb_basketball.txt")
-        results['Košarka'] = df_basketball
+        export_for_merge(df_basketball, "maxb_basketball.txt")
+        results[StandardNames.basketball] = df_basketball
 
+    print("...scraping maxb - fudbal")
     if 'Fudbal' in sport_ids:
-        football_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids['Fudbal']]).json()
-        df_football = parse_football_data(football_data_response_json)
-        print_to_file(df_football.to_string(), "maxb_football.txt")
-        results['Fudbal'] = df_football
+        soccer_data_response_json = get_sport_data(sidebar_sports_and_leagues[sport_ids[MaxbNames.soccer]]).json()
+        df_soccer = parse_football_data(soccer_data_response_json)
+        print_to_file(df_soccer.to_string(), "maxb_soccer.txt")
+        export_for_merge(df_soccer, "maxb_soccer.txt")
+        results[StandardNames.soccer] = df_soccer
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return results

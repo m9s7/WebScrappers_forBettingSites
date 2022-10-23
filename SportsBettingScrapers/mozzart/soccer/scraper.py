@@ -85,6 +85,7 @@ def init_export_help(matches_response):
 
 
 def scrape_soccer(soccer_id, all_subgames_json):
+    print("...scraping mozz - soccer")
 
     subgames = get_focused_soccer_subgames(all_subgames_json[str(soccer_id)])
     matches_response = get_match_ids(soccer_id).json()['matches']
@@ -94,9 +95,12 @@ def scrape_soccer(soccer_id, all_subgames_json):
 
     # For testing with Insomnia
     # print(soccer_id)
-    # print(list(export.keys())[1:10], " - ", subgames)
+    # print(list(export_help.keys()), " - ", subgames)
 
-    odds = get_odds(list(export_help.keys()), subgames).json()
+    odds = get_odds(list(export_help.keys()), subgames)
+    if "error" in odds and odds['error'] is True:
+        print("mozz soccer fucking me up fam", odds)
+
     for o in odds:
         if "kodds" not in o:
             continue
@@ -140,6 +144,4 @@ def scrape_soccer(soccer_id, all_subgames_json):
                         # print(e)
                         export.append(e)
     df = pd.DataFrame(export, columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
-    print_to_file(df.to_string(), f"mozz_soccer.txt")
-
     return df

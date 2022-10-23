@@ -1,6 +1,6 @@
 import pandas as pd
 
-from models.common_functions import print_to_file
+from models.common_functions import print_to_file, export_for_merge
 from models.match_model import MozzNames, ExportIDX
 from mozzart.helper_functions import init_export_with_matches
 from mozzart.subgames_parsers.two_outcome_ki_subgame_parser import get_2_outcome_subgames
@@ -18,7 +18,7 @@ def scrape_esports(esports_id, all_subgames_json):
     # print(esports_id)
     # print(list(export.keys())[1:10], " - ", subgames)
 
-    odds = get_odds(list(export.keys()), subgames).json()
+    odds = get_odds(list(export.keys()), subgames)
     for o in odds:
         if "kodds" not in o:
             continue
@@ -48,6 +48,4 @@ def scrape_esports(esports_id, all_subgames_json):
                         f"Mozzart: Two-outcome game with third outcome {game} {subgame} found, value={val}")
 
     df = pd.DataFrame(list(export.values()), columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
-    print_to_file(df.to_string(), f"mozz_esports.txt")
-
     return df

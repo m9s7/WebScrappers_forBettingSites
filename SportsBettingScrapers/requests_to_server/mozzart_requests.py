@@ -1,3 +1,5 @@
+import json
+
 import requests as r
 from datetime import datetime
 
@@ -127,7 +129,6 @@ def get_all_subgames():
 # # "shortName": "Kwon S."
 #
 def get_match_ids(sport_id=None):
-
     url = "https://www.mozzartbet.com/betOffer2"
 
     payload = {
@@ -191,11 +192,6 @@ def get_match_ids(sport_id=None):
 #
 def get_odds(matches, subgames):
     url = "https://www.mozzartbet.com/getBettingOdds"
-
-    payload = {
-        "matchIds": matches,
-        "subgames": subgames
-    }
     headers = {
         "cookie": "i18next=sr; SERVERID=MB-N7",
         "authority": "www.mozzartbet.com",
@@ -208,6 +204,34 @@ def get_odds(matches, subgames):
         "x-requested-with": "XMLHttpRequest"
     }
 
-    response = r.request("POST", url, json=payload, headers=headers)
+    limit = 49
 
-    return response
+    # Send one
+    _matches = matches[:limit]
+    matches = matches[limit:]
+
+    payload = {
+        "matchIds": _matches,
+        "subgames": subgames
+    }
+
+    response = r.request("POST", url, json=payload, headers=headers)
+    result = response.json()
+    # print(result, "\n\n\n\n\n")
+
+    # Send more if you need
+    while len(matches) > 0:
+        _matches = matches[:limit]
+        matches = matches[limit:]
+
+        payload = {
+            "matchIds": _matches,
+            "subgames": subgames
+        }
+
+        response = r.request("POST", url, json=payload, headers=headers)
+
+        # print(response.json(), "\n\n\n\n\n")
+        result = result + response.json()
+
+    return result
