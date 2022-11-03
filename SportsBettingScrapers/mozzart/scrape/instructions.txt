@@ -1,0 +1,47 @@
+get_curr_sidebar_sports_and_leagues - sidebar isto ko maxb, samo sto mi salju i sport id
+
+get_all_subgames
+
+dodaj ovo u soccer
+
+{
+    "sportId": 1,
+    "gameName": [
+        {
+            "id": 3233,
+            "languageCode": "sr",
+            "name": "Oba tima daju gol",
+            "shortName": "tgg",
+            "description": null
+        }
+    ],
+    "subGameName": [
+        {
+            "id": 1001130001,
+            "languageCode": "sr",
+            "name": "gg",
+            "shortName": null,
+            "description": "Oba tima će postići najmanje po gol na meču"
+        },
+        {
+            "id": 1001130002,
+            "languageCode": "sr",
+            "name": "ng",
+            "shortName": null,
+            "description": "Bar jedan tim neće postići gol na meču"
+        },
+        {
+            "id": 1001130004,
+            "languageCode": "sr",
+            "name": "1gg",
+            "shortName": null,
+            "description": "Oba tima će postići najmanje po gol u prvom poluvremenu"
+        },
+        {
+            "id": 1001130010,
+            "languageCode": "sr",
+            "name": "1ng",
+            "shortName": null,
+            "description": "Bar jedan tim neće postići gol u prvom poluvremenu"
+        },
+        .. dalje ne, samo ng-gg, 1ng-1gg, 2ng-2gg

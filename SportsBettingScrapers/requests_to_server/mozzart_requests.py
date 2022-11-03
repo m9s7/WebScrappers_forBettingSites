@@ -1,25 +1,22 @@
-import json
-
 import requests as r
 from datetime import datetime
 
 
 # # Get every "sport" currently offered in the sidebar and all leagues in that "sport"
-# # it's possible to pass a list of sportIDs and leagueIDs and subGameIDs
 # # url = "https://www.mozzartbet.com/getRegularGroups"
 # # returns: [Sport dictionary]
 #
 # # Description of a Sport dictionary
 # # "id": int           # Sport ID ex. 2
 # # "name": string      # Sport name ex. "Košarka"
-# # "count": int        # Num of matches currently offered in that sport ex. 61
+# # "count": int        # Num of matches currently offered in that sport ex. 61, never 0
 # # "compets": []       # List of league dictionaries those matches are played in
 # #
 # # # Description of a League dictionary
 # # "id": int           # League id ex. 26
 # # "name": string      # League name ex. "EVROLIGA"
 # # "shortName": string # League short name ex. "EVRL"
-# # "count": int        # Num of matches curr offered in that league ex. 9
+# # "count": int        # Num of matches curr offered in that league ex. 9, never 0
 #
 def get_curr_sidebar_sports_and_leagues():
     url = "https://www.mozzartbet.com/getRegularGroups"
@@ -51,7 +48,7 @@ def get_curr_sidebar_sports_and_leagues():
 
     response = r.request("POST", url, json=payload, headers=headers)
 
-    return response
+    return response.json()
 
 
 # # Gets a dictionary of all possible bets (subgames) you can potentially place for every sport (in general, not currently)
@@ -106,7 +103,7 @@ def get_all_subgames():
 
     response = r.request("GET", url, headers=headers)
 
-    return response
+    return response.json()
 
 
 # # match id, start time, participants and their ids
@@ -160,7 +157,7 @@ def get_match_ids(sport_id=None):
 
     response = r.request("POST", url, json=payload, headers=headers)
 
-    return response
+    return response.json()
 
 
 # # Get odds for given matches and subgames

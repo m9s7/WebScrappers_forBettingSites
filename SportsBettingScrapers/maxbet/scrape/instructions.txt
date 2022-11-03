@@ -1,0 +1,22 @@
+# write the stream of calls you need to make and what each one gets you and what you need from it
+
+get_curr_sidebar_sports_and_leagues()
+# Goal: Get every "sport" currently offered in the sidebar and all leagues in that "sport"
+- there are no parameters
+- you get sport names and for each one a list of leagues [name, betLeagueId]
+- ovi parametri su uvek dobri ali ko zna nekad mozda nece biti zato postojie (blocked==false, numOfMatches!=0, active==true)
+- DA LI MOZE DA SE ISKORISTI 'leagueCode' npr za nba je 20482 to nije isto kao betLeagueId koji je 144532
+
+get_sport_data
+# Goal: Get match_ids for leagues passed in
+- parameter is a dict {sportName: string, leagues: [string]}
+- "blocked": false,
+
+get_match_data
+# Goal: Get
+	"home": "Real M.",
+	"away": "Celtic",
+	"kickOffTime": 1667411100000,
+	leagueName: "UEFA Champions League"
+	odds I am interested in
+- param: match_id

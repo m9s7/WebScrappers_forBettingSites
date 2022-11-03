@@ -40,7 +40,7 @@ def find_arb(sport_name, capital):
     results['total_stake'] = round(results['stake1'] + results['stake2'])
     results['ROI'] = round(((capital / results['total_stake']) - 1) * 100, 2)
 
-    results.drop(['%_bet1', '%_bet2'], axis=1)
+    results = results.drop(['%_bet1', '%_bet2'], axis=1)
 
     print("\n", results.to_string(index=False))
     print("--- %s seconds ---" % (time.time() - start_time))

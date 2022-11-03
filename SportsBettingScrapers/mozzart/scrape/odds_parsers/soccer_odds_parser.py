@@ -1,6 +1,7 @@
 import pandas as pd
 
-from models.common_functions import print_to_file
+from models.match_model import scraper_columns
+from mozzart.scrape.helper_functions import init_export_help
 from requests_to_server.mozzart_requests import get_odds, get_match_ids
 
 
@@ -15,7 +16,7 @@ def get_game_name(header):
     return header['gameName'][0]['name']
 
 
-def get_focused_soccer_subgames(offers):
+def get_soccer_subgame_ids(offers):
     focused_subgames = set()
 
     for offer in offers:
@@ -73,25 +74,14 @@ def get_focused_soccer_subgames(offers):
     return list(focused_subgames)
 
 
-def init_export_help(matches_response):
-    export_help = {}
-    for match in matches_response:
-        if match['specialType'] != 0 or len(match['participants']) != 2:
-            continue
-        e = [match['participants'][0]['name'], match['participants'][1]['name']]
-        export_help[match['id']] = e
-
-    return export_help
-
-
 def scrape_soccer(soccer_id, all_subgames_json):
     print("...scraping mozz - soccer")
 
-    subgames = get_focused_soccer_subgames(all_subgames_json[str(soccer_id)])
-    matches_response = get_match_ids(soccer_id).json()['matches']
+    subgames = get_soccer_subgame_ids(all_subgames_json[str(soccer_id)])
+    matches_response = get_match_ids(soccer_id)['matches']
 
-    export_help = init_export_help(matches_response)
     export = []
+    export_help = init_export_help(matches_response)
 
     # For testing with Insomnia
     # print(soccer_id)
@@ -100,6 +90,7 @@ def scrape_soccer(soccer_id, all_subgames_json):
     odds = get_odds(list(export_help.keys()), subgames)
     if "error" in odds and odds['error'] is True:
         print("mozz soccer fucking me up fam", odds)
+        return pd.DataFrame()
 
     for o in odds:
         if "kodds" not in o:
@@ -118,7 +109,6 @@ def scrape_soccer(soccer_id, all_subgames_json):
             # Konačan ishod
             game = sg['subGame']['gameShortName']
             subgame = sg['subGame']['subGameName']
-            # print(game, subgame)
 
             interested_subgames = ['1tm2', '1tm1', '2tm2', '1ug', 'ug', '2ug', 'tm1', '2tm1', 'tm2']
             if game in interested_subgames:
@@ -133,7 +123,6 @@ def scrape_soccer(soccer_id, all_subgames_json):
                     if t2_game == t1_game and t2_subgame == '1+':
                         e = export_help[match_id] + [" ".join([t1_game, t1_subgame]), tip1[t1_game, t1_subgame],
                                                      " ".join([t2_game, t2_subgame]), tip2[t2_game, t2_subgame]]
-                        # print(e)
                         export.append(e)
             if t1_subgame.startswith('0-') and len(t1_subgame) == 3:
                 x = int(t1_subgame[2])
@@ -141,7 +130,7 @@ def scrape_soccer(soccer_id, all_subgames_json):
                     if t2_game == t1_game and t2_subgame == f'{x + 1}+':
                         e = export_help[match_id] + [" ".join([t1_game, t1_subgame]), tip1[t1_game, t1_subgame],
                                                      " ".join([t2_game, t2_subgame]), tip2[t2_game, t2_subgame]]
-                        # print(e)
                         export.append(e)
-    df = pd.DataFrame(export, columns=['1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val'])
+
+    df = pd.DataFrame(export, columns=scraper_columns)
     return df

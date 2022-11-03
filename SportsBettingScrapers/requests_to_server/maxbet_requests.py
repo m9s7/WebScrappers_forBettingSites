@@ -18,8 +18,9 @@ header = {
 # # "name": string,                     # League name ex. "Košarka EUROLEAGUE"
 # # "leagueCode": 50684,                # idk?
 # # "numOfMatches": int,                # Num of matches curr offered in that league ex. 9
+# # "blocked"/"active" bool             # always false/true but who knows sometimes they may not be that why they exist
 # # irrelevant league attr:
-# # flagId, leagueType, prepaymentDisabled, sortValue, sportName, imatchCBL,blocked, single, orderNumber, favorite, active, sport, description
+# # flagId, leagueType, prepaymentDisabled, sortValue, sportName, imatchCBL, single, orderNumber, favorite, sport, description
 #
 def get_curr_sidebar_sports_and_leagues():
     url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
@@ -27,11 +28,12 @@ def get_curr_sidebar_sports_and_leagues():
 
     response = r.request("GET", url, headers=header, params=querystring)
 
-    return response
+    return response.json()
 
 
 # # # Get a list of dictionaries, on for every league in the "sport" (sport_dict arg),
 # # # request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
+# # # parameter is a dict {sportName: string, leagues: [string]}
 # # # returns: [League super dictionaries]
 # #
 # # # League super dictionaries description
@@ -76,14 +78,14 @@ def get_curr_sidebar_sports_and_leagues():
 # # "caption": "1",
 # # irrelevant: tipTypeId, tipTypeTag, mainType
 #
-def get_sport_data(sport_dict):
+def get_match_ids(league_list):
     request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
-    token = '#'.join([str(pair[1]) for pair in sport_dict['leagues']])
+    token = '#'.join([str(league) for league in league_list])
     query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
 
     sport_data_response = r.request("GET", request_url, headers=header, params=query)
 
-    return sport_data_response
+    return sport_data_response.json()
 
 
 def get_match_data(match_id):
@@ -92,4 +94,6 @@ def get_match_data(match_id):
 
     response = r.request("GET", url, headers=header, params=querystring)
 
-    return response
+    # u svakom ovom proveri da li je response OK i ako nije raise error
+
+    return response.json()
