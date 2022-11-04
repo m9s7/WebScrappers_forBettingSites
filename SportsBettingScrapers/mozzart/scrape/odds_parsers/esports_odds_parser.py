@@ -1,7 +1,8 @@
 import pandas as pd
 
-from models.match_model import scraper_columns
+from models.match_model import scraper_columns, ExportIDX
 from mozzart.scrape.helper_functions import init_export_help, get_subgame_ids
+from mozzart.standardize.standardization_functions import standardize_esports_tip_name
 from requests_to_server.mozzart_requests import get_odds, get_match_ids
 
 
@@ -60,4 +61,11 @@ def scrape_esports(esports_id, all_subgames_json):
             export.append(e)
 
     df = pd.DataFrame(export, columns=scraper_columns)
+
+    # Standardize tip names
+    col_name = df.columns[ExportIDX.TIP1_NAME]
+    df[col_name] = df[col_name].map(standardize_esports_tip_name)
+    col_name = df.columns[ExportIDX.TIP2_NAME]
+    df[col_name] = df[col_name].map(standardize_esports_tip_name)
+
     return df

@@ -1,7 +1,8 @@
 import pandas as pd
 
-from models.match_model import scraper_columns
+from models.match_model import scraper_columns, ExportIDX
 from mozzart.scrape.helper_functions import init_export_help
+from mozzart.standardize.standardization_functions import standardize_soccer_tip_name
 from requests_to_server.mozzart_requests import get_odds, get_match_ids
 
 
@@ -20,56 +21,45 @@ def get_soccer_subgame_ids(offers):
     focused_subgames = set()
 
     for offer in offers:
+        if offer['name'] != 'Kompletna ponuda':
+            continue
+        for header in offer['regularHeaders']:
+            game = get_game_name(header)
 
-        # ug
-        if offer['name'] == "Ukupno golova na meču":
-            for header in offer['regularHeaders']:
-                game = get_game_name(header)
+            # ug
+            if game == "Ukupno golova na meču":
+                for subgame in header['subGameName']:
+                    if ug_condition_satisfied(subgame['name']):
+                        focused_subgames.add(subgame['id'])
 
-                if game == "Ukupno golova na meču":
-                    for subgame in header['subGameName']:
-                        if ug_condition_satisfied(subgame['name']):
-                            focused_subgames.add(subgame['id'])
+            if game == "Tačan broj golova na meču":
+                [focused_subgames.add(subgame['id']) for subgame in header['subGameName'] if subgame['name'] == '0']
 
-                if game == "Tačan broj golova na meču":
-                    [focused_subgames.add(subgame['id']) for subgame in header['subGameName'] if subgame['name'] == '0']
+            # ug tim 1, ug tim 2
+            if game in ["Tim 1 daje gol", "Tim 2 daje gol"]:
+                for subgame in header['subGameName']:
+                    if ug_condition_satisfied(subgame['name']):
+                        focused_subgames.add(subgame['id'])
 
-        # ug tim 1, ug tim 2
-        if offer['name'] == "Oba tima daju gol":
-            for header in offer['regularHeaders']:
-                game = get_game_name(header)
-                if game in ["Tim 1 daje gol", "Tim 2 daje gol"]:
-                    for subgame in header['subGameName']:
-                        if ug_condition_satisfied(subgame['name']):
-                            focused_subgames.add(subgame['id'])
+            # ug1p, ug1p tim 1, ug1p tim 2
+            if game == "Tačan broj golova prvo poluvreme":
+                [focused_subgames.add(subgame['id']) for subgame in header['subGameName'] if subgame['name'] == '0']
 
-        # ug1p, ug1p tim 1, ug1p tim 2
-        if offer['name'] == "Prvo poluvreme":
-            for header in offer['regularHeaders']:
-                game = get_game_name(header)
+            if game in ["Ukupno golova prvo poluvreme", "Tim 1 golovi prvo poluvreme",
+                        "Tim 2 golovi prvo poluvreme"]:
+                for subgame in header['subGameName']:
+                    if ug_condition_satisfied(subgame['name']):
+                        focused_subgames.add(subgame['id'])
 
-                if game == "Tačan broj golova prvo poluvreme":
-                    [focused_subgames.add(subgame['id']) for subgame in header['subGameName'] if subgame['name'] == '0']
+            # ug2p, ug2p tim 1, ug2p tim 2
+            if game == "Tačan broj golova drugo poluvreme":
+                [focused_subgames.add(subgame['id']) for subgame in header['subGameName'] if subgame['name'] == '0']
 
-                if game in ["Ukupno golova prvo poluvreme", "Tim 1 golovi prvo poluvreme",
-                            "Tim 2 golovi prvo poluvreme"]:
-                    for subgame in header['subGameName']:
-                        if ug_condition_satisfied(subgame['name']):
-                            focused_subgames.add(subgame['id'])
-
-        # ug2p, ug2p tim 1, ug2p tim 2
-        if offer['name'] == "Drugo poluvreme":
-            for header in offer['regularHeaders']:
-                game = get_game_name(header)
-
-                if game == "Tačan broj golova drugo poluvreme":
-                    [focused_subgames.add(subgame['id']) for subgame in header['subGameName'] if subgame['name'] == '0']
-
-                if game in ["Ukupno golova drugo poluvreme", "Tim 1 golovi drugo poluvreme",
-                            "Tim 2 golovi drugo poluvreme"]:
-                    for subgame in header['subGameName']:
-                        if ug_condition_satisfied(subgame['name']):
-                            focused_subgames.add(subgame['id'])
+            if game in ["Ukupno golova drugo poluvreme", "Tim 1 golovi drugo poluvreme",
+                        "Tim 2 golovi drugo poluvreme"]:
+                for subgame in header['subGameName']:
+                    if ug_condition_satisfied(subgame['name']):
+                        focused_subgames.add(subgame['id'])
 
     return list(focused_subgames)
 
@@ -133,4 +123,11 @@ def scrape_soccer(soccer_id, all_subgames_json):
                         export.append(e)
 
     df = pd.DataFrame(export, columns=scraper_columns)
+
+    # Standardize tip names
+    col_name = df.columns[ExportIDX.TIP1_NAME]
+    df[col_name] = df[col_name].map(standardize_soccer_tip_name)
+    col_name = df.columns[ExportIDX.TIP2_NAME]
+    df[col_name] = df[col_name].map(standardize_soccer_tip_name)
+
     return df

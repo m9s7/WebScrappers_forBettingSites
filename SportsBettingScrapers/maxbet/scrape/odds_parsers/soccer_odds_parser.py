@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 
 from models.match_model import ExportIDX
@@ -15,9 +17,11 @@ from requests_to_server.maxbet_requests import get_match_data
 # Gost golovi drugo poluvreme
 
 # # Not yet added:
-# Winner
+# Winner (ne ako je kvota 1)
 # Winner prvo poluvreme
 # Winner drugo poluvreme
+# GG, NG
+
 
 golovi_subgames = {
     "Ukupno golova 90'": {
@@ -68,33 +72,9 @@ golovi_subgames = {
 }
 
 
-def standardize_tip_name(tip):
-    tip = tip.strip()
-    tip_len = len(tip)
-
-    # print('converting', tip, " len = ", len(tip))
-    res = ""
-    if tip.startswith('1') or tip.startswith('2'):
-        res += tip[0]
-        tip = tip[1:]
-
-    if tip.startswith('D'):
-        return res + "tm1 " + tip[1:]
-    elif tip.startswith('G'):
-        return res + "tm2 " + tip[1:]
-
-    if tip.startswith('ug'):
-        if tip_len == 7 and tip[5] == "T":
-            return tip[3] + 'ug 0'
-        elif tip_len == 8 and tip[4] == 'P':
-            return tip[3] + 'ug ' + tip[5:]
-        else:
-            return tip
-
-    raise ValueError("standardize_tip_name encountered unexpected tip")
-
-
 def get_soccer_odds(match_ids):
+    start_time = time.time()
+
     export = []
     for match_id in match_ids:
 
@@ -146,4 +126,5 @@ def get_soccer_odds(match_ids):
 
     columns = ['kick_off', 'league', '1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val']
     df = pd.DataFrame(export, columns=columns)
+    print("--- %s seconds ---" % (time.time() - start_time))
     return df

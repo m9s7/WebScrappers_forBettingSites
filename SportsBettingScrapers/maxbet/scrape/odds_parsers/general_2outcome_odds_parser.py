@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 
 from models.match_model import ExportIDX
@@ -5,6 +7,8 @@ from requests_to_server.maxbet_requests import get_match_data
 
 
 def get_2outcome_odds(match_ids, subgame_names):
+    start_time = time.time()
+
     export = []
     for match_id in match_ids:
 
@@ -27,4 +31,5 @@ def get_2outcome_odds(match_ids, subgame_names):
 
     columns = ['kick_off', 'league', '1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val']
     df = pd.DataFrame(export, columns=columns)
+    print("--- %s seconds ---" % (time.time() - start_time))
     return df
