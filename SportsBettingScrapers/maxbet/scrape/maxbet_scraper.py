@@ -40,110 +40,57 @@ def parse_get_matches_response(response):
     return matches
 
 
-# Pass in a list of sports you want to scrape
-def scrape():
+def get_standardization_func(sport):
+    if sport == MaxbNames.tennis:
+        return standardize_tennis_tip_name
+    if sport == MaxbNames.esports:
+        return standardize_esports_tip_name
+    if sport == MaxbNames.basketball:
+        return standardize_basketball_tip_name
+    if sport == MaxbNames.tabletennis:
+        return standardize_table_tennis_tip_name
+    if sport == MaxbNames.soccer:
+        return standardize_soccer_tip_name
+    raise TypeError('No tip name standardization function for sport enum: ', sport)
+
+
+# Pass in a list of sports you want to scrape, sports_to_scrape
+def scrape(sports_to_scrape):
     start_time = time.time()
 
     results = {}
     sidebar = parse_sidebar(get_curr_sidebar_sports_and_leagues())
 
-    if MaxbNames.tabletennis in sidebar:
-        print("...scraping maxb - table tennis")
+    for sport in sports_to_scrape:
+        sport_standard_name = sport.toStandardName()
+        print(f"...scraping maxb - {str(sport_standard_name)}")
 
-        response_json = get_match_ids(sidebar[MaxbNames.tabletennis])
+        response_json = get_match_ids(sidebar[sport])
         matches_list = parse_get_matches_response(response_json)
 
-        df_tabletennis = get_2outcome_odds(matches_list, ['Konačan ishod', 'Prvi set'])
+        df = None
+        if sport == MaxbNames.tennis:
+            df = get_2outcome_odds(matches_list,
+                                   ['Konačan ishod', 'Prvi set', 'Drugi set', 'Tie Break', 'Tie Break prvi set'])
+        if sport == MaxbNames.esports:
+            df = get_2outcome_odds(matches_list, ['Konačan ishod'])
+        if sport == MaxbNames.basketball:
+            df = get_2outcome_odds(matches_list, ['Konačan ishod sa produžecima'])
+        if sport == MaxbNames.tabletennis:
+            df = get_2outcome_odds(matches_list, ['Konačan ishod', 'Prvi set'])
+        if sport == MaxbNames.soccer:
+            df = get_soccer_odds(matches_list)
 
-        # Standardize tip names
-        col_name = df_tabletennis.columns[ExportIDX.TIP1_NAME]
-        df_tabletennis[col_name] = df_tabletennis[col_name].map(standardize_table_tennis_tip_name)
-        col_name = df_tabletennis.columns[ExportIDX.TIP2_NAME]
-        df_tabletennis[col_name] = df_tabletennis[col_name].map(standardize_table_tennis_tip_name)
+        standardize_tip_name = get_standardization_func(sport)
+        col_name = df.columns[ExportIDX.TIP1_NAME]
+        df[col_name] = df[col_name].map(standardize_tip_name)
+        col_name = df.columns[ExportIDX.TIP2_NAME]
+        df[col_name] = df[col_name].map(standardize_tip_name)
 
-        results[StandardNames.tabletennis] = df_tabletennis
+        results[sport_standard_name] = df
 
-        print_to_file(df_tabletennis.to_string(index=False), "maxb_table_tennis.txt")
-        export_for_merge(df_tabletennis, "maxb_table_tennis.txt")
-
-    if MaxbNames.tennis in sidebar:
-        print("...scraping maxb - tennis")
-
-        response_json = get_match_ids(sidebar[MaxbNames.tennis])
-        matches_list = parse_get_matches_response(response_json)
-
-        df_tennis = get_2outcome_odds(matches_list, ['Konačan ishod', 'Prvi set', 'Drugi set', 'Tie Break', 'Tie Break prvi set'])
-
-        # Standardize tip names
-        col_name = df_tennis.columns[ExportIDX.TIP1_NAME]
-        df_tennis[col_name] = df_tennis[col_name].map(standardize_tennis_tip_name)
-        col_name = df_tennis.columns[ExportIDX.TIP2_NAME]
-        df_tennis[col_name] = df_tennis[col_name].map(standardize_tennis_tip_name)
-
-        results[StandardNames.tennis] = df_tennis
-
-        print_to_file(df_tennis.to_string(index=False), "maxb_tennis.txt")
-        export_for_merge(df_tennis, "maxb_tennis.txt")
-
-    if MaxbNames.esports in sidebar:
-        print("...scraping maxb - esports")
-
-        response_json = get_match_ids(sidebar[MaxbNames.esports])
-        matches_list = parse_get_matches_response(response_json)
-
-        df_esports = get_2outcome_odds(matches_list, ['Konačan ishod'])
-
-        # Standardize tip names
-        col_name = df_esports.columns[ExportIDX.TIP1_NAME]
-        df_esports[col_name] = df_esports[col_name].map(standardize_esports_tip_name)
-        col_name = df_esports.columns[ExportIDX.TIP2_NAME]
-        df_esports[col_name] = df_esports[col_name].map(standardize_esports_tip_name)
-
-        results[StandardNames.esports] = df_esports
-
-        print_to_file(df_esports.to_string(index=False), "maxb_esports.txt")
-        export_for_merge(df_esports, "maxb_esports.txt")
-
-    if MaxbNames.basketball in sidebar:
-        print("...scraping maxb - basketball")
-
-        response_json = get_match_ids(sidebar[MaxbNames.basketball])
-        matches_list = parse_get_matches_response(response_json)
-
-        df_basketball = get_2outcome_odds(matches_list, ['Konačan ishod sa produžecima'])
-
-        # Standardize tip names
-        col_name = df_basketball.columns[ExportIDX.TIP1_NAME]
-        df_basketball[col_name] = df_basketball[col_name].map(standardize_basketball_tip_name)
-        col_name = df_basketball.columns[ExportIDX.TIP2_NAME]
-        df_basketball[col_name] = df_basketball[col_name].map(standardize_basketball_tip_name)
-
-        results[StandardNames.basketball] = df_basketball
-
-        print_to_file(df_basketball.to_string(index=False), "maxb_basketball.txt")
-        export_for_merge(df_basketball, "maxb_basketball.txt")
-
-    if MaxbNames.soccer in sidebar:
-        print("...scraping maxb - soccer")
-
-        response_json = get_match_ids(sidebar[MaxbNames.soccer])
-        matches_list = parse_get_matches_response(response_json)
-
-        df_soccer = get_soccer_odds(matches_list)
-
-        # Standardize tip names
-        col_name = df_soccer.columns[ExportIDX.TIP1_NAME]
-        df_soccer[col_name] = df_soccer[col_name].map(standardize_soccer_tip_name)
-        col_name = df_soccer.columns[ExportIDX.TIP2_NAME]
-        df_soccer[col_name] = df_soccer[col_name].map(standardize_soccer_tip_name)
-
-        results[StandardNames.soccer] = df_soccer
-
-        print_to_file(df_soccer.to_string(index=False), "maxb_soccer.txt")
-        export_for_merge(df_soccer, "maxb_soccer.txt")
+        print_to_file(df.to_string(index=False), f"maxb_{str(sport_standard_name)}.txt")
+        export_for_merge(df, f"maxb_{str(sport_standard_name)}.txt")
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return results
-
-
-# scrape()

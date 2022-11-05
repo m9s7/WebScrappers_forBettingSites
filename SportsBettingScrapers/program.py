@@ -1,7 +1,40 @@
 import time
 
 from maxbet.scrape.maxbet_scraper import scrape as scrape_maxbet
+from maxbet.scrape.maxbet_scraper import get_sports_currently_offered as get_sports_currently_offered_maxb
+from models.match_model import StandardNames, MaxbNames, MozzNames
 from mozzart.scrape.mozzart_scraper import scrape as scrape_mozzart
+from mozzart.scrape.mozzart_scraper import get_sports_currently_offered as get_sports_currently_offered_mozz
+
+
+def get_sports_to_scrape():
+    sports_im_interested_in = {
+        StandardNames.tennis,
+        StandardNames.basketball,
+        StandardNames.esports,
+        StandardNames.soccer,
+        StandardNames.tabletennis
+    }
+    maxb_available_sports = set(
+        [MaxbNames.fromString(s).toStandardName() for s in get_sports_currently_offered_maxb() if
+         MaxbNames.fromString(s) is not None])
+    mozz_available_sports = set(
+        [MozzNames.fromString(s).toStandardName() for s in get_sports_currently_offered_mozz() if
+         MozzNames.fromString(s) is not None])
+
+    sports_to_scrape = list(
+        sports_im_interested_in.intersection(
+            maxb_available_sports.intersection(mozz_available_sports)
+        )
+    )
+
+    print("Sports I'm interested in: ", sports_im_interested_in)
+    print("Maxbet sports available: ", maxb_available_sports)
+    print("Mozzart sports available: ", mozz_available_sports)
+
+    print("Sports that will be scraped: ", [str(s) for s in sports_to_scrape])
+
+    return sports_to_scrape
 
 
 def program():
@@ -14,20 +47,8 @@ def program():
 
     # TODO: scrape more data
     # Two-outcome Betting:
-    # - (DONE) tennis
-    # - cricket
-    # - baseball
-    # - (DONE) basketball with extra time included
-    # - (DONE) E-Sport
-    # - Football 0-3, 4+ (trazis ug 0-x i ako nadjes onda trazis ug (x+1)+), sve to isto za prvo/drugo poluvreme, 90', tim1/tim2, tim1-prvoPV kombinacije
-    # - Hokej pobednik meca ukljucujuci produzetke i penale
     # Three-outcome Betting: test cricket and soccer
     # The I gotta throw myself at handicaps, think of a system because there are is a million of options for them
-    # Winner = tie, kvota 1.0, mozda nije lose igrati i to
-
-    # - standardize these general 2outcome tip_names based on sport (preslikavanje napravi u jednom folderu, standardizeed_tip_names_maxb...)
-    # - - not here, not like this, make standardization module, this is the scraping module
-    # - - napravi neko preslikavanje maxbet_tip -> universal_tip, tip description
 
     # TODO: parallelize scraping
     # TODO: set it to run nonstop and trigger go part when its done
@@ -40,8 +61,10 @@ def program():
     # TODO: osmisli kako da se neradi fuzzy matching 10 puta ako ima 0-1 i 2+ pa 0-2 i 3+
     # mozda u mainu da se napravi set parova pa da se dodeljuje match id tako
 
-    maxb = scrape_maxbet()  # pass in a list of sports
-    mozz = scrape_mozzart()
+    sports_to_scrape = get_sports_to_scrape()
+
+    maxb = scrape_maxbet([s.toMaxbName() for s in sports_to_scrape])
+    mozz = scrape_mozzart([s.toMozzName() for s in sports_to_scrape])
 
     # arbs = []
     # for sport in set(maxb.keys()).intersection(mozz.keys()):
@@ -53,8 +76,6 @@ def program():
     #     else:
     #         arbs.append(res)
     #
-    # print("OVERALL EXECUTION TIME")
-    # print("--- %s seconds ---" % (time.time() - start_time))
     #
     # if len(arbs) != 0:
     #     broadcast_to_telegram("ALO LELEMUDI STIGLE FRISKE ARBE")
@@ -64,3 +85,6 @@ def program():
     # print('wha')
     # for a in arbs:
     #     print(a.to_string())
+
+    print("OVERALL EXECUTION TIME")
+    print("--- %s seconds ---" % (time.time() - start_time))

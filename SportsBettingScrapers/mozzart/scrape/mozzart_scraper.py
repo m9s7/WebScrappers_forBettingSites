@@ -25,7 +25,7 @@ def get_sports_currently_offered():
     return sports
 
 
-def scrape():
+def scrape(sports_to_scrape):
     start_time = time.time()
     print("...scraping mozz")
 
@@ -34,29 +34,20 @@ def scrape():
 
     results = {}
 
-    if MozzNames.tennis in name_id_dict:
-        tennis = scrape_tennis(name_id_dict[MozzNames.tennis], all_subgames_json)
-        print_to_file(tennis.to_string(index=False), f"mozz_tennis.txt")
-        export_for_merge(tennis, "mozz_tennis.txt")
-        results[StandardNames.tennis] = tennis
+    for sport in sports_to_scrape:
+        df = None
+        if sport == MozzNames.tennis:
+            df = scrape_tennis(name_id_dict[MozzNames.tennis], all_subgames_json)
+        if sport == MozzNames.esports:
+            df = scrape_esports(name_id_dict[MozzNames.esports], all_subgames_json)
+        if sport == MozzNames.basketball:
+            df = scrape_basketball(name_id_dict[MozzNames.basketball], all_subgames_json)
+        if sport == MozzNames.soccer:
+            df = scrape_soccer(name_id_dict[MozzNames.soccer], all_subgames_json)
 
-    if MozzNames.esports in name_id_dict:
-        esports = scrape_esports(name_id_dict[MozzNames.esports], all_subgames_json)
-        print_to_file(esports.to_string(index=False), f"mozz_esports.txt")
-        export_for_merge(esports, "mozz_esports.txt")
-        results[StandardNames.esports] = esports
-
-    if MozzNames.basketball in name_id_dict:
-        basketball = scrape_basketball(name_id_dict[MozzNames.basketball], all_subgames_json)
-        print_to_file(basketball.to_string(index=False), f"mozz_basketball.txt")
-        export_for_merge(basketball, "mozz_basketball.txt")
-        results[StandardNames.basketball] = basketball
-
-    if MozzNames.soccer in name_id_dict:
-        soccer = scrape_soccer(name_id_dict[MozzNames.soccer], all_subgames_json)
-        print_to_file(soccer.to_string(index=False), f"mozz_soccer.txt")
-        export_for_merge(soccer, "mozz_soccer.txt")
-        results[StandardNames.soccer] = soccer
+        print_to_file(df.to_string(index=False), f"mozz_{str(sport.toStandardName())}.txt")
+        export_for_merge(df, f"mozz_{str(sport.toStandardName())}.txt")
+        results[sport.toStandardName()] = df
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return results
