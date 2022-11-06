@@ -46,20 +46,7 @@ def program():
     # merge.argtypes = [ctypes.c_char_p]
 
     # TODO: scrape more data
-    # Two-outcome Betting:
-    # Three-outcome Betting: test cricket and soccer
-    # The I gotta throw myself at handicaps, think of a system because there are is a million of options for them
-
     # TODO: parallelize scraping
-    # TODO: set it to run nonstop and trigger go part when its done
-
-    # TODO: make debugging mode
-    # TODO: error checking
-
-    # TODO: its scraping for everything where it should only scrape for sports that are offered in both
-
-    # TODO: osmisli kako da se neradi fuzzy matching 10 puta ako ima 0-1 i 2+ pa 0-2 i 3+
-    # mozda u mainu da se napravi set parova pa da se dodeljuje match id tako
 
     sports_to_scrape = get_sports_to_scrape()
 

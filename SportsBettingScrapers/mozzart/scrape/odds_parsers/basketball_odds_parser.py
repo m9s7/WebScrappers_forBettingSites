@@ -68,4 +68,5 @@ def scrape_basketball(basketball_id, all_subgames_json):
     col_name = df.columns[ExportIDX.TIP2_NAME]
     df[col_name] = df[col_name].map(standardize_basketball_tip_name)
 
+    print("Matches scraped: ", len(list(export_help.keys())))
     return df
