@@ -10,7 +10,9 @@ def find_arb(sport_name, capital):
     if os.path.isfile(_path) and os.path.getsize(_path) > 0:
         records = pd.read_csv(_path)
     else:
-        return
+        return None
+
+    print_to_file(records.to_string(index=False), "chk.txt")
 
     print("...finding arbitrage opportunities\n-------------------------")
     start_time = time.time()
@@ -30,8 +32,7 @@ def find_arb(sport_name, capital):
 
     results = preprocessed_rec.loc[preprocessed_rec['outlay'] < 1].copy(deep=True)
     if results.empty:
-        print("No arbitrage opportunities\n")
-        return
+        return None
 
     print('OMG OMG is this real life\n')
 
@@ -42,7 +43,7 @@ def find_arb(sport_name, capital):
 
     results = results.drop(['%_bet1', '%_bet2'], axis=1)
 
-    print("\n", results.to_string(index=False))
+    # print("\n", results.to_string(index=False))
     print("--- %s seconds ---" % (time.time() - start_time))
     print_to_file(data=f'{datetime.datetime.now().timestamp()}\n', file="ARBITRAGE.txt", mode='a')
     print_to_file(data=results.to_string(index=False), file="ARBITRAGE.txt", mode='a')

@@ -149,3 +149,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_2P_TIM2_T0'
 
     raise ValueError(f'Unexpected tip_name: |{tip_name}|')
+
+
+def standardize_kickoff_time_string(kickoff_time):
+    return kickoff_time // 1000

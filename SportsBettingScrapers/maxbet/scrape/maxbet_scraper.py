@@ -3,9 +3,10 @@ import time
 from maxbet.scrape.odds_parsers.soccer_odds_parser import get_soccer_odds
 from maxbet.scrape.odds_parsers.general_2outcome_odds_parser import get_2outcome_odds
 from maxbet.standardize.standardization_functions import standardize_tennis_tip_name, standardize_table_tennis_tip_name, \
-    standardize_esports_tip_name, standardize_basketball_tip_name, standardize_soccer_tip_name
+    standardize_esports_tip_name, standardize_basketball_tip_name, standardize_soccer_tip_name, \
+    standardize_kickoff_time_string
 from models.common_functions import print_to_file, export_for_merge
-from models.match_model import StandardNames, MaxbNames, ExportIDX
+from models.match_model import MaxbNames, ExportIDX
 from requests_to_server.maxbet_requests import get_match_ids, get_curr_sidebar_sports_and_leagues
 
 
@@ -40,7 +41,7 @@ def parse_get_matches_response(response):
     return matches
 
 
-def get_standardization_func(sport):
+def get_standardization_func_4_tip_names(sport):
     if sport == MaxbNames.tennis:
         return standardize_tennis_tip_name
     if sport == MaxbNames.esports:
@@ -54,11 +55,9 @@ def get_standardization_func(sport):
     raise TypeError('No tip name standardization function for sport enum: ', sport)
 
 
-# Pass in a list of sports you want to scrape, sports_to_scrape
 def scrape(sports_to_scrape):
     start_time = time.time()
 
-    results = {}
     sidebar = parse_sidebar(get_curr_sidebar_sports_and_leagues())
 
     for sport in sports_to_scrape:
@@ -81,16 +80,15 @@ def scrape(sports_to_scrape):
         if sport == MaxbNames.soccer:
             df = get_soccer_odds(matches_list)
 
-        standardize_tip_name = get_standardization_func(sport)
+        standardize_tip_name = get_standardization_func_4_tip_names(sport)
+        col_name = df.columns[ExportIDX.KICKOFF]
+        df[col_name] = df[col_name].map(standardize_kickoff_time_string)
         col_name = df.columns[ExportIDX.TIP1_NAME]
         df[col_name] = df[col_name].map(standardize_tip_name)
         col_name = df.columns[ExportIDX.TIP2_NAME]
         df[col_name] = df[col_name].map(standardize_tip_name)
 
-        results[sport_standard_name] = df
-
         print_to_file(df.to_string(index=False), f"maxb_{str(sport_standard_name)}.txt")
         export_for_merge(df, f"maxb_{str(sport_standard_name)}.txt")
 
     print("--- %s seconds ---" % (time.time() - start_time))
-    return results

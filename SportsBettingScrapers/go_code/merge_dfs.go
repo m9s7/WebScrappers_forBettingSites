@@ -47,9 +47,22 @@ func merge(_sportName *C.char) {
 
 	// Merge
 	successfulMatches := 0
-	recordsToKeep := make([][]string, 0)
+	colsNames := []string{
+		"kick_off",
+		"league_" + bookieName1,
+		"league_" + bookieName2,
+		"1",
+		"2",
+		"tip1",
+		"tip1_" + bookieName1,
+		"tip1_" + bookieName2,
+		"tip2",
+		"tip2_" + bookieName1,
+		"tip2_" + bookieName2,
+	}
+	mergedRecords := make([][]string, 0)
+	mergedRecords = append(mergedRecords, colsNames)
 	for _, el1 := range bookie1.Maps() {
-		mergedRecord := make([]string, 11)
 		for _, el2 := range bookie2.Maps() {
 
 			//check if tip_names match
@@ -57,12 +70,11 @@ func merge(_sportName *C.char) {
 				continue
 			}
 
-			// check if time match is close
+			// check if kickoff times are similar
 			t1, _ := strconv.ParseInt(el1["kick_off"].(string), 10, 64)
 			t2, _ := strconv.ParseInt(el2["kick_off"].(string), 10, 64)
-			// 300,000, nznm za ovo vreme ali za sad me ne zajebava
-			print(t1, " - ", t2, "\n")
-			if t1-600 < t2 || t2 > t1+600 {
+			twentyMinutes := int64(1200)
+			if abs(t1-t2) > twentyMinutes {
 				continue
 			}
 
@@ -73,31 +85,37 @@ func merge(_sportName *C.char) {
 				if fuzzy.Ratio(el1["2"].(string), el2["2"].(string)) < 80 {
 					continue
 				}
-				mergeRecordsAsIs(&el1, &el2, &mergedRecord)
-
-			} else {
-
-				if fuzzy.Ratio(el1["1"].(string), el2["1"].(string)) >= 80 && fuzzy.Ratio(el1["2"].(string), el2["2"].(string)) >= 80 {
-					mergeRecordsAsIs(&el1, &el2, &mergedRecord)
-
-				} else if fuzzy.Ratio(el1["1"].(string), el2["2"].(string)) >= 80 && fuzzy.Ratio(el1["2"].(string), el2["1"].(string)) >= 80 {
-					if shouldNotSwitchTipVals(el1["tip1_name"].(string), sportName) {
-						mergeRecordsAsIs(&el1, &el2, &mergedRecord)
-					} else {
-						mergeRecordsSwitched(&el1, &el2, &mergedRecord)
-					}
-
-				} else {
+				if !isSameLeagueNum(el1["league"].(string), el2["league"].(string)) {
 					continue
-					//// No point in doing this with only 2 bookies because you are just going to remove None rows later
-					//if not merged_record:
-					//continue
-					//// merged_record = [i['1'], i['2'], i['tip1_name'], i['tip1_val'], None, i['tip2_name'], i['tip2_val'], None]
-					//
 				}
+				mergeRecords(&el1, &el2, &mergedRecords, false)
+				successfulMatches++
+				continue
+
 			}
-			recordsToKeep = append(recordsToKeep, mergedRecord)
-			successfulMatches++
+
+			if fuzzy.Ratio(el1["1"].(string), el2["1"].(string)) >= 80 &&
+				fuzzy.Ratio(el1["2"].(string), el2["2"].(string)) >= 80 &&
+				isSameLeagueNum(el1["league"].(string), el1["league"].(string)) {
+
+				mergeRecords(&el1, &el2, &mergedRecords, false)
+				successfulMatches++
+				continue
+			}
+			if fuzzy.Ratio(el1["1"].(string), el2["2"].(string)) >= 80 &&
+				fuzzy.Ratio(el1["2"].(string), el2["1"].(string)) >= 80 &&
+				isSameLeagueNum(el1["league"].(string), el1["league"].(string)) {
+
+				mergeRecords(&el1, &el2, &mergedRecords, shouldSwitchTipVals(el1["tip1_name"].(string), sportName))
+				successfulMatches++
+				continue
+			}
+
+			//// No point in doing this with only 2 bookies because you are just going to remove None rows later
+			//if not merged_record:
+			//continue
+			//// merged_record = [i['1'], i['2'], i['tip1_name'], i['tip1_val'], None, i['tip2_name'], i['tip2_val'], None]
+			//
 		}
 	}
 
@@ -110,19 +128,7 @@ func merge(_sportName *C.char) {
 		log.Fatal(err)
 	}
 
-	err = dataframe.LoadRecords(recordsToKeep, dataframe.Names(
-		"kick_off",
-		"league_"+bookieName1,
-		"league_"+bookieName2,
-		"1",
-		"2",
-		"tip1",
-		"tip1_"+bookieName1,
-		"tip1_"+bookieName2,
-		"tip2",
-		"tip2_"+bookieName1,
-		"tip2_"+bookieName2,
-	)).WriteCSV(f)
+	err = dataframe.LoadRecords(mergedRecords, dataframe.Names(colsNames...)).WriteCSV(f)
 	if err != nil {
 		fmt.Println("ERROR WRITING CSV TO FILE")
 		return
@@ -131,10 +137,46 @@ func merge(_sportName *C.char) {
 	fmt.Println("--- ", time.Now().Sub(startTime), " ---")
 }
 
+func main() {}
+
+func abs(x int64) int64 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+//func printSlice(slice []string) {
+//	for _, e := range slice {
+//		print(e, " ")
+//	}
+//	print("\n")
+//}
+
+func getLeagueNum(league string) int {
+	for _, s := range strings.Split(league, " ") {
+		leagueNum, err := strconv.Atoi(s)
+		if err != nil {
+			continue
+		}
+		return leagueNum
+	}
+	return -1
+}
+
+func isSameLeagueNum(l1 string, l2 string) bool {
+	l1LeagueNum := getLeagueNum(l1)
+	l2LeagueNum := getLeagueNum(l2)
+
+	if l1LeagueNum >= 2 || l2LeagueNum >= 2 {
+		return l1LeagueNum == l2LeagueNum
+	}
+	return true
+}
+
 func getBookieNameFromPath(path string) string {
 	bookieName := filepath.Base(path)
 	delim := strings.Index(bookieName, "_")
-	// if bookieName not in list of bookies throw an error
 	return bookieName[0:delim]
 }
 
@@ -160,22 +202,13 @@ func ReadCSVFromFile(csvPath string) dataframe.DataFrame {
 	return df
 }
 
-func main() {}
-
-// TODO: Write your own fuzzy matching, where
-// - you split by '/' if it's a pair in tennis and then you combine the two scores
-// - value partial matching percentage wise, idk just make it better then what you got currently
-// - or start a database which you fill with your scraping, and automatically have a que of moz_name - maxb_name y/n
-
-// TODO: parallelize MERGING IN GO
-
-func shouldNotSwitchTipVals(tipName string, sportName string) bool {
+func shouldSwitchTipVals(tipName string, sportName string) bool {
 
 	var tipNamesNotToSwitch [4]string
 	if sportName == "tennis" {
 		tipNamesNotToSwitch = [4]string{"TIE_BREAK_YES", "TIE_BREAK_NO", "TIE_BREAK_FST_SET_YES", "TIE_BREAK_FST_SET_NO"}
 	} else {
-		return true
+		return false
 	}
 	for _, el := range tipNamesNotToSwitch {
 		if tipName == el {
@@ -185,30 +218,36 @@ func shouldNotSwitchTipVals(tipName string, sportName string) bool {
 	return true
 }
 
-func mergeRecordsAsIs(el1 *map[string]interface{}, el2 *map[string]interface{}, mergedRecord *[]string) {
-	(*mergedRecord)[0] = (*el1)["kick_off"].(string)
-	(*mergedRecord)[1] = (*el1)["league"].(string)
-	(*mergedRecord)[2] = (*el2)["league"].(string)
-	(*mergedRecord)[3] = (*el1)["1"].(string)
-	(*mergedRecord)[4] = (*el1)["2"].(string)
-	(*mergedRecord)[5] = (*el1)["tip1_name"].(string)
-	(*mergedRecord)[6] = (*el1)["tip1_val"].(string)
-	(*mergedRecord)[7] = (*el2)["tip1_val"].(string)
-	(*mergedRecord)[8] = (*el1)["tip2_name"].(string)
-	(*mergedRecord)[9] = (*el1)["tip2_val"].(string)
-	(*mergedRecord)[10] = (*el2)["tip2_val"].(string)
+func mergeRecords(el1 *map[string]interface{}, el2 *map[string]interface{}, mergedRecords *[][]string, isSwitched bool) {
+
+	mergedRecord := make([]string, 11)
+
+	//	kick_off,league_maxb,league_mozz,1,2,tip1,tip1_maxb,tip1_mozz,tip2,tip2_maxb,tip2_mozz
+	mergedRecord[0] = (*el1)["kick_off"].(string)
+	mergedRecord[1] = (*el1)["league"].(string)
+	mergedRecord[2] = (*el2)["league"].(string)
+	mergedRecord[3] = (*el1)["1"].(string)
+	mergedRecord[4] = (*el1)["2"].(string)
+
+	// tip names
+	mergedRecord[5] = (*el1)["tip1_name"].(string)
+	mergedRecord[8] = (*el1)["tip2_name"].(string)
+
+	// bookie1 tip1 and tip2 values
+	mergedRecord[6] = (*el1)["tip1_val"].(string)
+	mergedRecord[9] = (*el1)["tip2_val"].(string)
+
+	if !isSwitched {
+		// keep second record as is
+		mergedRecord[7] = (*el2)["tip1_val"].(string)
+		mergedRecord[10] = (*el2)["tip2_val"].(string)
+	} else {
+		// switch second record
+		mergedRecord[7] = (*el2)["tip2_val"].(string)
+		mergedRecord[10] = (*el2)["tip1_val"].(string)
+	}
+
+	*mergedRecords = append(*mergedRecords, mergedRecord)
 }
 
-func mergeRecordsSwitched(el1 *map[string]interface{}, el2 *map[string]interface{}, mergedRecord *[]string) {
-	(*mergedRecord)[0] = (*el1)["kick_off"].(string)
-	(*mergedRecord)[1] = (*el1)["league"].(string)
-	(*mergedRecord)[2] = (*el2)["league"].(string)
-	(*mergedRecord)[3] = (*el1)["1"].(string)
-	(*mergedRecord)[4] = (*el1)["2"].(string)
-	(*mergedRecord)[5] = (*el1)["tip1_name"].(string)
-	(*mergedRecord)[6] = (*el1)["tip1_val"].(string)
-	(*mergedRecord)[7] = (*el2)["tip2_val"].(string)
-	(*mergedRecord)[8] = (*el1)["tip2_name"].(string)
-	(*mergedRecord)[9] = (*el1)["tip2_val"].(string)
-	(*mergedRecord)[10] = (*el2)["tip1_val"].(string)
-}
+// TODO: parallelize MERGING IN GO
