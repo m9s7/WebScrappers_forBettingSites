@@ -1,3 +1,4 @@
+import ctypes
 import time
 
 from maxbet.scrape.maxbet_scraper import scrape as scrape_maxbet
@@ -10,10 +11,10 @@ from mozzart.scrape.mozzart_scraper import get_sports_currently_offered as get_s
 def get_sports_to_scrape():
     sports_im_interested_in = {
         StandardNames.tennis,
-        StandardNames.basketball,
-        StandardNames.esports,
-        StandardNames.soccer,
-        StandardNames.tabletennis
+        # StandardNames.basketball,
+        # StandardNames.esports,
+        # StandardNames.soccer,
+        # StandardNames.tabletennis
     }
     maxb_available_sports = set(
         [MaxbNames.fromString(s).toStandardName() for s in get_sports_currently_offered_maxb() if
@@ -40,10 +41,10 @@ def get_sports_to_scrape():
 def program():
     start_time = time.time()
 
-    # library = ctypes.windll.LoadLibrary(
-    #     r'C:\Users\Matija\PycharmProjects\ScrapeEscape\SportsBettingScrapers\go_code\merge_dfs.dll')
-    # merge = library.merge
-    # merge.argtypes = [ctypes.c_char_p]
+    library = ctypes.windll.LoadLibrary(
+        r'C:\Users\Matija\PycharmProjects\ScrapeEscape\SportsBettingScrapers\go_code\merge_dfs.dll')
+    merge = library.merge
+    merge.argtypes = [ctypes.c_char_p]
 
     # TODO: scrape more data
     # TODO: parallelize scraping
@@ -54,9 +55,9 @@ def program():
     mozz = scrape_mozzart([s.toMozzName() for s in sports_to_scrape])
 
     # arbs = []
-    # for sport in set(maxb.keys()).intersection(mozz.keys()):
-    #     arg = str(sport).encode("utf-8")
-    #     merge(arg)
+    for sport in sports_to_scrape:
+        arg = str(sport).encode("utf-8")
+        merge(arg)
     #     res = find_arb(str(sport), 1000)
     #     if res is None:
     #         print("nema arbe ", sport, "\n")
