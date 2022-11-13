@@ -10,6 +10,9 @@ def scrape_esports(esports_id, all_subgames_json):
 
     subgames = get_subgame_ids(all_subgames_json[str(esports_id)], ['ki'])
     matches_response = get_match_ids(esports_id)['matches']
+    while matches_response is None:
+        print("Stuck on MOZZ betOffer2")
+        matches_response = get_match_ids(esports_id)['matches']
 
     export = []
     export_help = init_export_help(matches_response)

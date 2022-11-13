@@ -68,6 +68,9 @@ def scrape_soccer(soccer_id, all_subgames_json):
 
     subgames = get_soccer_subgame_ids(all_subgames_json[str(soccer_id)])
     matches_response = get_match_ids(soccer_id)['matches']
+    while matches_response is None:
+        print("Stuck on MOZZ betOffer2")
+        matches_response = get_match_ids(soccer_id)['matches']
 
     export = []
     export_help = init_export_help(matches_response)

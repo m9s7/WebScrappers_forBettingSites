@@ -29,6 +29,9 @@ def parse_sidebar(sidebar_sports_json):
 
 def get_sports_currently_offered():
     response = get_curr_sidebar_sports_and_leagues()
+    while response is None:
+        print("Stuck on getting maxbet sidebar info")
+        response = get_curr_sidebar_sports_and_leagues()
     sports = [sport['name'] for sport in response]
     return sports
 
@@ -58,13 +61,20 @@ def get_standardization_func_4_tip_names(sport):
 def scrape(sports_to_scrape):
     start_time = time.time()
 
-    sidebar = parse_sidebar(get_curr_sidebar_sports_and_leagues())
+    response = get_curr_sidebar_sports_and_leagues()
+    while response is None:
+        print("Stuck on getting maxbet sidebar info")
+        response = get_curr_sidebar_sports_and_leagues()
+
+    sidebar = parse_sidebar(response)
 
     for sport in sports_to_scrape:
         sport_standard_name = sport.toStandardName()
         print(f"...scraping maxb - {str(sport_standard_name)}")
 
-        response_json = get_match_ids(sidebar[sport])
+        response_json = None
+        while response_json is None:
+            response_json = get_match_ids(sidebar[sport])
         matches_list = parse_get_matches_response(response_json)
 
         df = None

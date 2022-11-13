@@ -47,6 +47,8 @@ def get_curr_sidebar_sports_and_leagues():
     }
 
     response = r.request("POST", url, json=payload, headers=headers)
+    if not response.ok:
+        return None
 
     return response.json()
 
@@ -102,6 +104,8 @@ def get_all_subgames():
     }
 
     response = r.request("GET", url, headers=headers)
+    if not response.ok:
+        return None
 
     return response.json()
 
@@ -156,6 +160,8 @@ def get_match_ids(sport_id=None):
     }
 
     response = r.request("POST", url, json=payload, headers=headers)
+    if not response.ok:
+        return None
 
     return response.json()
 

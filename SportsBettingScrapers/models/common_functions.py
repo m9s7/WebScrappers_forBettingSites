@@ -20,6 +20,10 @@ def nice_print_json(data_json):
     print(json.dumps(data_json, indent=4, separators=(',', ': '), ensure_ascii=False).encode('utf8').decode())
 
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def export_for_merge(data, file):
     old_dir = os.getcwd()
     os.chdir(r'C:\Users\Matija\PycharmProjects\ScrapeEscape\SportsBettingScrapers\go_code\dfs_for_import')

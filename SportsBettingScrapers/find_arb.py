@@ -1,4 +1,3 @@
-import datetime
 import os
 import time
 import pandas as pd
@@ -34,8 +33,6 @@ def find_arb(sport_name, capital):
     if results.empty:
         return None
 
-    print('OMG OMG is this real life\n')
-
     results['stake1'] = round(results['%_bet1'] * capital)
     results['stake2'] = round(results['%_bet2'] * capital)
     results['total_stake'] = round(results['stake1'] + results['stake2'])
@@ -43,8 +40,5 @@ def find_arb(sport_name, capital):
 
     results = results.drop(['%_bet1', '%_bet2'], axis=1)
 
-    # print("\n", results.to_string(index=False))
     print("--- %s seconds ---" % (time.time() - start_time))
-    print_to_file(data=f'{datetime.datetime.now().timestamp()}\n', file="ARBITRAGE.txt", mode='a')
-    print_to_file(data=results.to_string(index=False), file="ARBITRAGE.txt", mode='a')
     return results

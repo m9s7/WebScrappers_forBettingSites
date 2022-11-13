@@ -1,3 +1,5 @@
+import ssl
+
 import requests as r
 
 # add SESSION = {session_cookie}; to header, if cookies ever become necessary
@@ -27,6 +29,9 @@ def get_curr_sidebar_sports_and_leagues():
     querystring = {"v": "4.48.18", "locale": "sr"}
 
     response = r.request("GET", url, headers=header, params=querystring)
+
+    if not response.ok:
+        return None
 
     return response.json()
 
@@ -83,17 +88,24 @@ def get_match_ids(league_list):
     token = '#'.join([str(league) for league in league_list])
     query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
 
-    sport_data_response = r.request("GET", request_url, headers=header, params=query)
+    response = r.request("GET", request_url, headers=header, params=query)
+    if not response.ok:
+        return None
 
-    return sport_data_response.json()
+    return response.json()
 
 
 def get_match_data(match_id):
     url = f"https://www.maxbet.rs/ibet/offer/special/undefined/{match_id}.json"
     querystring = {"v": "4.48.18", "locale": "sr"}
 
-    response = r.request("GET", url, headers=header, params=querystring)
+    print(f"\r{match_id}", end='')
 
-    # u svakom ovom proveri da li je response OK i ako nije raise error
+    try:
+        response = r.request("GET", url, headers=header, params=querystring)
+    except Exception as e:
+        print("SKIPPED MATCH: ", match_id)
+        print(e)
+        return None
 
     return response.json()

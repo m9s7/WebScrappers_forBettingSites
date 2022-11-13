@@ -10,6 +10,9 @@ def scrape_tennis(tennis_id, all_subgames_json):
 
     subgames = get_subgame_ids(all_subgames_json[str(tennis_id)], ['ki', '1s', 'ug1s', 'ug2s', 'tb'])
     matches_response = get_match_ids(tennis_id)['matches']
+    while matches_response is None:
+        print("Stuck on MOZZ betOffer2")
+        matches_response = get_match_ids(tennis_id)['matches']
 
     export = []
     export_help = init_export_help(matches_response)

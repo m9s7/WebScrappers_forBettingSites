@@ -31,15 +31,12 @@ class MozzNames(str, enum.Enum):
 
     @staticmethod
     def fromString(s):
-        if s == 'Tenis':
-            return MozzNames.tennis
-        if s == 'Košarka':
-            return MozzNames.basketball
-        if s == 'Esports':
-            return MozzNames.esports
-        if s == 'Fudbal':
-            return MozzNames.soccer
-        return None
+        try:
+            result = MozzNames(s)
+        except ValueError:
+            result = None
+        finally:
+            return result
 
 class MaxbNames(str, enum.Enum):
     tennis = 'Tenis',
@@ -63,19 +60,40 @@ class MaxbNames(str, enum.Enum):
 
     @staticmethod
     def fromString(s):
-        if s == 'Tenis':
-            return MaxbNames.tennis
-        if s == 'Košarka':
-            return MaxbNames.basketball
-        if s == 'Esports':
-            return MaxbNames.esports
-        if s == 'Fudbal':
-            return MaxbNames.soccer
-        if s == 'Stoni Tenis':
-            return MaxbNames.tabletennis
-        return None
+        try:
+            result = MaxbNames(s)
+        except ValueError:
+            result = None
+        finally:
+            return result
+class SoccbetNames(str, enum.Enum):
+    tennis = 'Tenis',
+    basketball = 'Košarka',
+    esports = 'ESport',
+    soccer = 'Fudbal',
+    tabletennis = 'Stoni Tenis',
 
+    def toStandardName(self):
+        if self == SoccbetNames.tennis:
+            return StandardNames.tennis
+        if self == SoccbetNames.basketball:
+            return StandardNames.basketball
+        if self == SoccbetNames.esports:
+            return StandardNames.esports
+        if self == SoccbetNames.soccer:
+            return StandardNames.soccer
+        if self == SoccbetNames.tabletennis:
+            return StandardNames.tabletennis
+        raise ValueError('Unsuported value here')
 
+    @staticmethod
+    def fromString(s):
+        try:
+            result = SoccbetNames(s)
+        except ValueError:
+            result = None
+        finally:
+            return result
 
 class StandardNames(str, enum.Enum):
     tennis = 'tennis',
@@ -111,6 +129,19 @@ class StandardNames(str, enum.Enum):
             return MozzNames.tabletennis
         if self == StandardNames.soccer:
             return MozzNames.soccer
+        raise ValueError('Unsuported value')
+
+    def toSoccbetName(self):
+        if self == StandardNames.tennis:
+            return SoccbetNames.tennis
+        if self == StandardNames.basketball:
+            return SoccbetNames.basketball
+        if self == StandardNames.esports:
+            return SoccbetNames.esports
+        if self == StandardNames.tabletennis:
+            return SoccbetNames.tabletennis
+        if self == StandardNames.soccer:
+            return SoccbetNames.soccer
         raise ValueError('Unsuported value')
 
 scraper_columns = ['kick_off', 'league', '1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val']

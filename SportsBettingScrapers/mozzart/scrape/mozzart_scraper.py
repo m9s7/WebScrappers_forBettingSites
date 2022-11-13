@@ -23,6 +23,9 @@ def parse_sidebar(sidebar_response):
 
 def get_sports_currently_offered():
     response = get_curr_sidebar_sports_and_leagues()
+    while response is None:
+        print('Stuck on getting mozz sidebar info')
+        response = get_curr_sidebar_sports_and_leagues()
     sports = [sport['name'] for sport in response]
     return sports
 
@@ -43,8 +46,16 @@ def scrape(sports_to_scrape):
     start_time = time.time()
     print("...scraping mozz")
 
-    name_id_dict = parse_sidebar(get_curr_sidebar_sports_and_leagues())
+    response = get_curr_sidebar_sports_and_leagues()
+    while response is None:
+        print('Stuck on getting mozz sidebar info')
+        response = get_curr_sidebar_sports_and_leagues()
+
+    name_id_dict = parse_sidebar(response)
+
     all_subgames_json = get_all_subgames()
+    while all_subgames_json is None:
+        all_subgames_json = get_all_subgames()
 
     for sport in sports_to_scrape:
         df = None

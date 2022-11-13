@@ -80,6 +80,8 @@ def get_soccer_odds(match_ids):
     for match_id in match_ids:
 
         match = get_match_data(match_id)
+        if match is None:
+            continue
         matches_scraped_counter += 1
         e = [match['kickOffTime'], match['leagueName'], match['home'], match['away'], None, None, None, None]
         for subgame in match['odBetPickGroups']:
@@ -128,6 +130,6 @@ def get_soccer_odds(match_ids):
 
     columns = ['kick_off', 'league', '1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val']
     df = pd.DataFrame(export, columns=columns)
-    print("Matches scraped: ", matches_scraped_counter)
+    print("\nMatches scraped: ", matches_scraped_counter)
     print("--- %s seconds ---" % (time.time() - start_time))
     return df
