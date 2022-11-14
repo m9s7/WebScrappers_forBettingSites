@@ -1,4 +1,4 @@
-from models.common_functions import eprint
+from common.common_functions import eprint
 
 
 def raise_not_2_outcome_game_error(game, outcome_name, outcome_desc, outcome_code, value):

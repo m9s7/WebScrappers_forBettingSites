@@ -1,17 +1,15 @@
 import ctypes
 import time
 
+from common.models import StandardNames, MaxbNames, MozzNames, SoccbetNames
+from bookies.maxbet.scrape.maxbet_scraper import get_sports_currently_offered as get_sports_currently_offered_maxb, \
+    scrape as scrape_maxbet
+from bookies.mozzart.scrape.mozzart_scraper import get_sports_currently_offered as get_sports_currently_offered_mozz, \
+    scrape as scrape_mozzart
+from bookies.soccerbet.scrape.soccerbet_scraper import \
+    get_sports_currently_offered as get_sports_currently_offered_soccbet, scrape as scrape_soccerbet
 from find_arb import find_arb
 from requests_to_server.telegram import broadcast_to_telegram
-
-from maxbet.scrape.maxbet_scraper import scrape as scrape_maxbet
-from mozzart.scrape.mozzart_scraper import scrape as scrape_mozzart
-
-from models.match_model import StandardNames, MaxbNames, MozzNames, SoccbetNames
-
-from maxbet.scrape.maxbet_scraper import get_sports_currently_offered as get_sports_currently_offered_maxb
-from mozzart.scrape.mozzart_scraper import get_sports_currently_offered as get_sports_currently_offered_mozz
-from soccerbet.scraper import get_sports_currently_offered as get_sports_currently_offered_soccbet
 
 
 def get_sports_to_scrape():
@@ -34,7 +32,7 @@ def get_sports_to_scrape():
 
     available_bookies = [maxb_available_sports, mozz_available_sports, soccbet_available_sports]
 
-    print("Sports I'm interested in: ", sports_im_interested_in)
+    print("Sports I'm interested in: ", sports_im_interested_in, '\n')
     print("Maxbet sports available: ", maxb_available_sports)
     print("Mozzart sports available: ", mozz_available_sports)
     print("Soccerbet sports available: ", soccbet_available_sports)
@@ -43,7 +41,7 @@ def get_sports_to_scrape():
     for s in sports_im_interested_in:
         if in_at_least_2(s, available_bookies):
             sports_to_scrape.append(s)
-    print("Sports that will be scraped: ", [str(s) for s in sports_to_scrape])
+    print("\nSports that will be scraped: ", [str(s) for s in sports_to_scrape])
 
     return sports_to_scrape
 
@@ -73,7 +71,9 @@ def program():
     sports_to_scrape = get_sports_to_scrape()
     scrape_maxbet([s.toMaxbName() for s in sports_to_scrape])
     scrape_mozzart([s.toMozzName() for s in sports_to_scrape])
+    scrape_soccerbet([s.toSoccbetName() for s in sports_to_scrape])
 
+    # edit merge function
     arbs = []
     for sport in sports_to_scrape:
         arg = str(sport).encode("utf-8")

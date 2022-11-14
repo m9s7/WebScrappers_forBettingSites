@@ -2,12 +2,13 @@ import time
 
 import pandas as pd
 
-from models.match_model import scraper_columns
+from common.models import scraper_columns
 from requests_to_server.soccerbet_requests import get_league_matches_info, get_match_odd_values
-from soccerbet.scrape.parse_response_functions import parse_get_league_matches_info
+from bookies.soccerbet.scrape.parse_response_functions import parse_get_league_matches_info
 
 
 def soccer_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict, betgame_groups_dict):
+    print("...scraping soccerbet - soccer")
     start_time = time.time()
 
     matched_scraped_counter = 0
@@ -15,12 +16,16 @@ def soccer_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict,
     for league in leagues_from_sidebar:
 
         response = get_league_matches_info(league['Id'])
+        if response is None:
+            print(f"Soccerbet league {league['Id']}, get_league_matches_info() is None, skipping it..")
         match_info_list = parse_get_league_matches_info(response)
 
         for match in match_info_list:
             e1 = [match['kickoff'], league['Name'], match['home'], match['away']]
 
             match_odds = get_match_odd_values(match['match_id'])
+            if match_odds is None:
+                continue
 
             tip1 = {}
             tip2 = {}
@@ -75,7 +80,6 @@ def soccer_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict,
                             matched_scraped_counter += 1
 
     df = pd.DataFrame(export, columns=scraper_columns)
-    print(df.to_string(index=False))
-    # TODO ovde odmah export nemora u main scraper-u
     print("--- %s seconds ---" % (time.time() - start_time))
     print("Matches scraped: ", matched_scraped_counter)
+    return df

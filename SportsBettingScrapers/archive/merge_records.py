@@ -3,7 +3,7 @@ import time
 import pandas as pd
 from thefuzz import fuzz
 
-from models.common_functions import print_to_file
+from common.common_functions import print_to_file
 
 
 def merge_records(sport_name, maxbet, mozzart):

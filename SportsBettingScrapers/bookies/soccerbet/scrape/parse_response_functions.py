@@ -1,5 +1,4 @@
 from requests_to_server.soccerbet_requests import get_curr_sidebar_league_ids
-from soccerbet.standardize.standardization_functions import parse_kickoff_string
 
 
 def parse_get_curr_sidebar_league_ids(response):
@@ -16,13 +15,17 @@ def parse_get_league_matches_info(response):
             'match_id': match['Id'],
             'home': match['HomeCompetitorName'],
             'away': match['AwayCompetitorName'],
-            'kickoff': parse_kickoff_string(match['StartDate'])
+            'kickoff': match['StartDate']
         })
     return matches
 
 
 def create_sidebar(master_data, sport_dict):
-    response = get_curr_sidebar_league_ids()
+    response = None
+    while response is None:
+        print("Stuck on soccerbet, get_curr_sidebar_league_ids()")
+        response = get_curr_sidebar_league_ids()
+
     league_ids = parse_get_curr_sidebar_league_ids(response)
 
     sidebar = {}

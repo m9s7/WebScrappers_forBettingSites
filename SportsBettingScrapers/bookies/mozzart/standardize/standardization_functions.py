@@ -1,3 +1,6 @@
+from common.models import MozzNames
+
+
 def standardize_basketball_tip_name(tip_name):
     if tip_name is None:
         return None
@@ -179,5 +182,32 @@ def standardize_soccer_tip_name(tip_name):
     raise ValueError(f'Unexpected tip_name: |{tip_name}|')
 
 
+def standardize_tabletennis_tip_name(tip_name):
+    if tip_name == 'ki 1':
+        return 'KI_1'
+    if tip_name == 'ki 2':
+        return 'KI_2'
+    # nemaju:
+    # if tip_name == 'S1_1':
+    #     return 'FST_SET_1'
+    # if tip_name == 'S1_2':
+    #     return 'FST_SET_2'
+    raise ValueError(f'Unexpected tip_name: {tip_name}')
+
+
 def standardize_kickoff_time_string(kickoff_time):
     return kickoff_time // 1000
+
+
+def get_standardization_func_4_tip_names(sport):
+    if sport == MozzNames.tennis:
+        return standardize_tennis_tip_name
+    if sport == MozzNames.esports:
+        return standardize_esports_tip_name
+    if sport == MozzNames.basketball:
+        return standardize_basketball_tip_name
+    if sport == MozzNames.soccer:
+        return standardize_soccer_tip_name
+    if sport == MozzNames.tabletennis:
+        return standardize_tabletennis_tip_name
+    raise TypeError('No tip name standardization function for sport enum: ', sport)

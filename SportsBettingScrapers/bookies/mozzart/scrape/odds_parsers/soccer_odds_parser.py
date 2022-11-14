@@ -1,7 +1,7 @@
 import pandas as pd
 
-from models.match_model import scraper_columns, ExportIDX
-from mozzart.scrape.helper_functions import init_export_help
+from common.models import scraper_columns
+from bookies.mozzart.scrape.helper_functions import init_export_help
 from requests_to_server.mozzart_requests import get_odds, get_match_ids
 
 

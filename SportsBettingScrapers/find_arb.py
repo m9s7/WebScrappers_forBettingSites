@@ -1,7 +1,7 @@
 import os
 import time
 import pandas as pd
-from models.common_functions import print_to_file
+from common.common_functions import print_to_file
 
 
 def find_arb(sport_name, capital):

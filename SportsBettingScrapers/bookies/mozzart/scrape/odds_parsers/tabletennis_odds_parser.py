@@ -1,12 +1,12 @@
 import pandas as pd
 
-from models.match_model import scraper_columns
-from mozzart.scrape.helper_functions import init_export_help, get_subgame_ids
+from common.models import scraper_columns
+from bookies.mozzart.scrape.helper_functions import init_export_help, get_subgame_ids
 from requests_to_server.mozzart_requests import get_odds, get_match_ids
 
 
-def scrape_esports(esports_id, all_subgames_json):
-    print("...scraping mozz - esports")
+def scrape_tabletennis(esports_id, all_subgames_json):
+    print("...scraping mozz - tabletennis")
 
     subgames = get_subgame_ids(all_subgames_json[str(esports_id)], ['ki'])
     matches_response = get_match_ids(esports_id)['matches']
@@ -17,7 +17,6 @@ def scrape_esports(esports_id, all_subgames_json):
     export = []
     export_help = init_export_help(matches_response)
 
-    # TODO: make debugging mode
     # For testing with Insomnia
     # print(tennis_id)
     # print(list(export_help.keys())[1:10], " - ", subgames)

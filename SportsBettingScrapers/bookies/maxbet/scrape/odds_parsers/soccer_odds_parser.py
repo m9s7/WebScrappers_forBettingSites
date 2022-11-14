@@ -2,7 +2,7 @@ import time
 
 import pandas as pd
 
-from models.match_model import ExportIDX
+from common.models import ExportIDX
 from requests_to_server.maxbet_requests import get_match_data
 
 # # Added:

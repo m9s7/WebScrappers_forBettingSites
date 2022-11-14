@@ -1,12 +1,12 @@
 import time
 
-from maxbet.scrape.odds_parsers.soccer_odds_parser import get_soccer_odds
-from maxbet.scrape.odds_parsers.general_2outcome_odds_parser import get_2outcome_odds
-from maxbet.standardize.standardization_functions import standardize_tennis_tip_name, standardize_table_tennis_tip_name, \
+from bookies.maxbet.scrape.odds_parsers.soccer_odds_parser import get_soccer_odds
+from bookies.maxbet.scrape.odds_parsers.general_2outcome_odds_parser import get_2outcome_odds
+from bookies.maxbet.standardize.standardization_functions import standardize_tennis_tip_name, standardize_table_tennis_tip_name, \
     standardize_esports_tip_name, standardize_basketball_tip_name, standardize_soccer_tip_name, \
     standardize_kickoff_time_string
-from models.common_functions import print_to_file, export_for_merge
-from models.match_model import MaxbNames, ExportIDX
+from common.common_functions import print_to_file, export_for_merge
+from common.models import MaxbNames, ExportIDX
 from requests_to_server.maxbet_requests import get_match_ids, get_curr_sidebar_sports_and_leagues
 
 
@@ -69,6 +69,13 @@ def scrape(sports_to_scrape):
     sidebar = parse_sidebar(response)
 
     for sport in sports_to_scrape:
+
+        try:
+            sidebar[sport]
+        except KeyError:
+            print(sport, " not currently offered at maxbet")
+            continue
+
         sport_standard_name = sport.toStandardName()
         print(f"...scraping maxb - {str(sport_standard_name)}")
 

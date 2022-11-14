@@ -13,10 +13,11 @@ class ExportIDX(enum.IntEnum):
 
 
 class MozzNames(str, enum.Enum):
-    tennis = 'Tenis',
-    basketball = 'Košarka',
+    tennis = 'Tenis'
+    basketball = 'Košarka'
     esports = 'Esports'
     soccer = 'Fudbal'
+    tabletennis = 'Stoni tenis'
 
     def toStandardName(self):
         if self == MozzNames.tennis:
@@ -27,6 +28,8 @@ class MozzNames(str, enum.Enum):
             return StandardNames.esports
         if self == MozzNames.soccer:
             return StandardNames.soccer
+        if self == MozzNames.tabletennis:
+            return StandardNames.tabletennis
         raise ValueError('Unsuported value')
 
     @staticmethod
@@ -100,7 +103,7 @@ class StandardNames(str, enum.Enum):
     basketball = 'basketball',
     esports = 'esports'
     soccer = 'soccer'
-    tabletennis = 'table_tennis'
+    tabletennis = 'tabletennis'
 
     def __str__(self):
         return str(self.value)
