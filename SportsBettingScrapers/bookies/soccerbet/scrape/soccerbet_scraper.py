@@ -30,7 +30,7 @@ def scrape(sports_to_scrape):
     print("scrapping soccerbet... ")
     start_time = time.time()
 
-    master_data = None
+    master_data = get_master_data()
     while master_data is None:
         print("Stuck on soccerbet, get_master_data()")
         master_data = get_master_data()

@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -16,111 +17,104 @@ import (
 
 //export merge
 func merge(_sportName *C.char) {
+	//arg: _sportName * C.char
 
 	var sportName string = C.GoString(_sportName)
+	//sportName := "tennis"
 
 	startTime := time.Now()
 	fmt.Println("... merging scraped data - " + sportName)
-	//
-	// Load data
-	path1 := "C:\\Users\\Matija\\PycharmProjects\\ScrapeEscape\\SportsBettingScrapers\\go_code\\dfs_for_import\\maxb_" + sportName + ".txt"
-	path2 := "C:\\Users\\Matija\\PycharmProjects\\ScrapeEscape\\SportsBettingScrapers\\go_code\\dfs_for_import\\mozz_" + sportName + ".txt"
 
-	df1 := ReadCSVFromFile(path1)
-	df2 := ReadCSVFromFile(path2)
-
-	// Order books based by num of records
-	var bookie1, bookie2 *dataframe.DataFrame
-	var bookieName1, bookieName2 string
-
-	if df1.Nrow() > df2.Nrow() {
-		bookie1 = &df1
-		bookie2 = &df2
-		bookieName1 = getBookieNameFromPath(path1)
-		bookieName2 = getBookieNameFromPath(path2)
-	} else {
-		bookie1 = &df2
-		bookie2 = &df1
-		bookieName1 = getBookieNameFromPath(path2)
-		bookieName2 = getBookieNameFromPath(path1)
+	importPaths := []string{
+		"C:\\Users\\Matija\\PycharmProjects\\ScrapeEscape\\SportsBettingScrapers\\go_code\\dfs_for_import\\maxb_" + sportName + ".txt",
+		"C:\\Users\\Matija\\PycharmProjects\\ScrapeEscape\\SportsBettingScrapers\\go_code\\dfs_for_import\\mozz_" + sportName + ".txt",
+		"C:\\Users\\Matija\\PycharmProjects\\ScrapeEscape\\SportsBettingScrapers\\go_code\\dfs_for_import\\soccbet_" + sportName + ".txt",
 	}
+
+	var bookies []bookie
+	LoadBookiesFromImport(&bookies, &importPaths)
+	OrderBooksByNumOfRecords(bookies)
+
+	mergedRecords := make([][]string, 0)
+	InitMergedRecordsColumns(&mergedRecords, &bookies)
+	mergedRecordsColIndxMap := GetColumnIndexes(len(bookies))
 
 	// Merge
 	successfulMatches := 0
-	colsNames := []string{
-		"kick_off",
-		"league_" + bookieName1,
-		"league_" + bookieName2,
-		"1",
-		"2",
-		"tip1",
-		"tip1_" + bookieName1,
-		"tip1_" + bookieName2,
-		"tip2",
-		"tip2_" + bookieName1,
-		"tip2_" + bookieName2,
-	}
-	mergedRecords := make([][]string, 0)
-	mergedRecords = append(mergedRecords, colsNames)
-	for _, el1 := range bookie1.Maps() {
-		for _, el2 := range bookie2.Maps() {
+	for i, el1 := range (*bookies[0].dfPointer).Records() {
 
-			//check if tip_names match
-			if el1["tip1_name"] != el2["tip1_name"] || el1["tip2_name"] != el2["tip2_name"] {
-				continue
-			}
+		// skip column names row
+		if i == 0 {
+			continue
+		}
 
-			// check if kickoff times are similar
-			t1, _ := strconv.ParseInt(el1["kick_off"].(string), 10, 64)
-			t2, _ := strconv.ParseInt(el2["kick_off"].(string), 10, 64)
-			twentyMinutes := int64(1200)
-			if abs(t1-t2) > twentyMinutes {
-				continue
-			}
+		recordToMerge := initRecordWithEl1(&el1, &mergedRecordsColIndxMap, len(bookies))
+		doAddRecordToMerged := false
 
-			if sportName == "soccer" {
-				if fuzzy.Ratio(el1["1"].(string), el2["1"].(string)) < 80 {
+		for bookieOrder := 1; bookieOrder < len(bookies); bookieOrder++ {
+
+			for j, el2 := range (*bookies[bookieOrder].dfPointer).Records() {
+
+				// skip column names row
+				if j == 0 {
 					continue
 				}
-				if fuzzy.Ratio(el1["2"].(string), el2["2"].(string)) < 80 {
+
+				// check if tip_names match
+				if el1[tip1Name] != el2[tip1Name] || el1[tip2Name] != el2[tip2Name] {
 					continue
 				}
-				if !isSameLeagueNum(el1["league"].(string), el2["league"].(string)) {
+
+				// check if kickoff times are similar
+				t1, _ := strconv.ParseInt(el1[kickOff], 10, 64)
+				t2, _ := strconv.ParseInt(el2[kickOff], 10, 64)
+				twentyMinutes := int64(1200)
+				if abs(t1-t2) > twentyMinutes {
 					continue
 				}
-				mergeRecords(&el1, &el2, &mergedRecords, false)
-				successfulMatches++
-				continue
+
+				// check if league numbers match
+				if !isSameLeagueNum(el1[league], el2[league]) {
+					continue
+				}
+
+				if sportName == "soccer" {
+					if fuzzy.Ratio(el1[_1_], el2[_1_]) < 80 {
+						continue
+					}
+					if fuzzy.Ratio(el1[_2_], el2[_2_]) < 80 {
+						continue
+					}
+
+					doAddRecordToMerged = addElToRecord(&el2, bookieOrder, &recordToMerge, &mergedRecordsColIndxMap, false)
+					successfulMatches++
+					continue
+				}
+
+				if fuzzy.Ratio(el1[_1_], el2[_1_]) >= 80 && fuzzy.Ratio(el1[_2_], el2[_2_]) >= 80 {
+
+					doAddRecordToMerged = addElToRecord(&el2, bookieOrder, &recordToMerge, &mergedRecordsColIndxMap, false)
+					successfulMatches++
+					continue
+				}
+				if fuzzy.Ratio(el1[_1_], el2[_2_]) >= 80 && fuzzy.Ratio(el1[_2_], el2[_1_]) >= 80 {
+
+					doAddRecordToMerged = addElToRecord(&el2, bookieOrder, &recordToMerge, &mergedRecordsColIndxMap, shouldSwitchTipVals(el1[tip1Name], sportName))
+					successfulMatches++
+					continue
+				}
 
 			}
+		}
 
-			if fuzzy.Ratio(el1["1"].(string), el2["1"].(string)) >= 80 &&
-				fuzzy.Ratio(el1["2"].(string), el2["2"].(string)) >= 80 &&
-				isSameLeagueNum(el1["league"].(string), el1["league"].(string)) {
-
-				mergeRecords(&el1, &el2, &mergedRecords, false)
-				successfulMatches++
-				continue
-			}
-			if fuzzy.Ratio(el1["1"].(string), el2["2"].(string)) >= 80 &&
-				fuzzy.Ratio(el1["2"].(string), el2["1"].(string)) >= 80 &&
-				isSameLeagueNum(el1["league"].(string), el1["league"].(string)) {
-
-				mergeRecords(&el1, &el2, &mergedRecords, shouldSwitchTipVals(el1["tip1_name"].(string), sportName))
-				successfulMatches++
-				continue
-			}
-
-			//// No point in doing this with only 2 bookies because you are just going to remove None rows later
-			//if not merged_record:
-			//continue
-			//// merged_record = [i['1'], i['2'], i['tip1_name'], i['tip1_val'], None, i['tip2_name'], i['tip2_val'], None]
-			//
+		if doAddRecordToMerged {
+			mergedRecords = append(mergedRecords, recordToMerge)
 		}
 	}
 
-	fmt.Println(bookieName1, ": ", bookie1.Nrow())
-	fmt.Println(bookieName2, ": ", bookie2.Nrow())
+	for _, bookie := range bookies {
+		fmt.Println(bookie.name, ": ", (*bookie.dfPointer).Nrow())
+	}
 	fmt.Println("Successfully merged: ", successfulMatches, " records")
 
 	f, err := os.Create("C:\\Users\\Matija\\PycharmProjects\\ScrapeEscape\\SportsBettingScrapers\\go_code\\dfs_for_export\\export_" + sportName + ".txt")
@@ -128,7 +122,10 @@ func merge(_sportName *C.char) {
 		log.Fatal(err)
 	}
 
-	err = dataframe.LoadRecords(mergedRecords, dataframe.Names(colsNames...)).WriteCSV(f)
+	//colsNames = mergedRecordsColIndxMap
+
+	// , dataframe.Names(colsNames...)
+	err = dataframe.LoadRecords(mergedRecords).WriteCSV(f)
 	if err != nil {
 		fmt.Println("ERROR WRITING CSV TO FILE")
 		return
@@ -137,7 +134,10 @@ func merge(_sportName *C.char) {
 	fmt.Println("--- ", time.Now().Sub(startTime), " ---")
 }
 
-func main() {}
+type bookie struct {
+	name      string
+	dfPointer *dataframe.DataFrame
+}
 
 func abs(x int64) int64 {
 	if x < 0 {
@@ -145,13 +145,6 @@ func abs(x int64) int64 {
 	}
 	return x
 }
-
-//func printSlice(slice []string) {
-//	for _, e := range slice {
-//		print(e, " ")
-//	}
-//	print("\n")
-//}
 
 func getLeagueNum(league string) int {
 	for _, s := range strings.Split(league, " ") {
@@ -218,36 +211,121 @@ func shouldSwitchTipVals(tipName string, sportName string) bool {
 	return true
 }
 
-func mergeRecords(el1 *map[string]interface{}, el2 *map[string]interface{}, mergedRecords *[][]string, isSwitched bool) {
-
-	mergedRecord := make([]string, 11)
-
-	//	kick_off,league_maxb,league_mozz,1,2,tip1,tip1_maxb,tip1_mozz,tip2,tip2_maxb,tip2_mozz
-	mergedRecord[0] = (*el1)["kick_off"].(string)
-	mergedRecord[1] = (*el1)["league"].(string)
-	mergedRecord[2] = (*el2)["league"].(string)
-	mergedRecord[3] = (*el1)["1"].(string)
-	mergedRecord[4] = (*el1)["2"].(string)
-
-	// tip names
-	mergedRecord[5] = (*el1)["tip1_name"].(string)
-	mergedRecord[8] = (*el1)["tip2_name"].(string)
-
-	// bookie1 tip1 and tip2 values
-	mergedRecord[6] = (*el1)["tip1_val"].(string)
-	mergedRecord[9] = (*el1)["tip2_val"].(string)
-
-	if !isSwitched {
-		// keep second record as is
-		mergedRecord[7] = (*el2)["tip1_val"].(string)
-		mergedRecord[10] = (*el2)["tip2_val"].(string)
-	} else {
-		// switch second record
-		mergedRecord[7] = (*el2)["tip2_val"].(string)
-		mergedRecord[10] = (*el2)["tip1_val"].(string)
+func GetColumnIndexes(numOfBookies int) map[string]int {
+	ColIndx := map[string]int{
+		"kick_off": 0,
+		"league":   1,
 	}
+	ColIndx["1"] = ColIndx["league"] + numOfBookies
+	ColIndx["2"] = ColIndx["1"] + 1
+	ColIndx["tip1_name"] = ColIndx["2"] + 1
+	ColIndx["tip2_name"] = ColIndx["tip1_name"] + numOfBookies + 1
 
-	*mergedRecords = append(*mergedRecords, mergedRecord)
+	return ColIndx
 }
 
-// TODO: parallelize MERGING IN GO
+func initRecordWithEl1(el1 *[]string, mergedRecordsColIndxMap *map[string]int, numOfBooks int) []string {
+	i := mergedRecordsColIndxMap
+
+	mergedRecord := make([]string, 5+3*numOfBooks)
+
+	mergedRecord[(*i)["kick_off"]] = (*el1)[kickOff]
+	mergedRecord[(*i)["league"]] = (*el1)[league]
+	mergedRecord[(*i)["1"]] = (*el1)[_1_]
+	mergedRecord[(*i)["2"]] = (*el1)[_2_]
+	mergedRecord[(*i)["tip1_name"]] = (*el1)[tip1Name]
+	mergedRecord[(*i)["tip1_name"]+1] = (*el1)[tip1Val]
+	mergedRecord[(*i)["tip2_name"]] = (*el1)[tip2Name]
+	mergedRecord[(*i)["tip2_name"]+1] = (*el1)[tip2Val]
+
+	// upisi i vred za kvote pa na kraju ako su ostali el svi none samo nemoj da ga ubacis u mergedRecords
+	return mergedRecord
+}
+
+func addElToRecord(el *[]string, bookieOrder int, record *[]string, mergedRecordsColIndxMap *map[string]int, isSwitched bool) bool {
+
+	i := mergedRecordsColIndxMap
+
+	(*record)[(*i)["league"]+bookieOrder] = (*el)[league]
+	if !isSwitched {
+		// keep second record as is
+		(*record)[(*i)["tip1_name"]+1+bookieOrder] = (*el)[tip1Val]
+		(*record)[(*i)["tip2_name"]+1+bookieOrder] = (*el)[tip2Val]
+	} else {
+		// switch second record
+		(*record)[(*i)["tip1_name"]+1+bookieOrder] = (*el)[tip2Val]
+		(*record)[(*i)["tip2_name"]+1+bookieOrder] = (*el)[tip1Val]
+	}
+
+	return true
+}
+
+//TODO: parallelize MERGING IN GO
+
+//func PrintBookies(bookies *[]bookie) {
+//	for _, b := range *bookies {
+//		print(b.name)
+//		print((*(b.dfPointer)).String())
+//	}
+//}
+
+//func printSlice(slice []string) {
+//	for _, e := range slice {
+//		print(e, " ")
+//	}
+//	print("\n")
+//}
+
+func LoadBookiesFromImport(bookies *[]bookie, importPaths *[]string) {
+	for i := 0; i < len(*importPaths); i++ {
+
+		df := ReadCSVFromFile((*importPaths)[i])
+		if df.Nrow() == 0 {
+			continue
+		}
+
+		*bookies = append(*bookies, bookie{
+			getBookieNameFromPath((*importPaths)[i]),
+			&df},
+		)
+	}
+}
+
+func OrderBooksByNumOfRecords(bookies []bookie) {
+	sort.Slice(bookies, func(i, j int) bool {
+		return (*((bookies[i]).dfPointer)).Nrow() > (*((bookies[j]).dfPointer)).Nrow()
+	})
+}
+
+func InitMergedRecordsColumns(mergedRecords *[][]string, bookies *[]bookie) {
+	colsNames := []string{"kick_off"}
+	for _, bookie := range *bookies {
+		colsNames = append(colsNames, "league_"+bookie.name)
+	}
+	colsNames = append(colsNames, "1", "2", "tip1")
+	for _, bookie := range *bookies {
+		colsNames = append(colsNames, "tip1_"+bookie.name)
+	}
+	colsNames = append(colsNames, "tip2")
+	for _, bookie := range *bookies {
+		colsNames = append(colsNames, "tip2_"+bookie.name)
+	}
+
+	*mergedRecords = append(*mergedRecords, colsNames)
+}
+
+func main() {
+	//merge()
+}
+
+// Indexes of bookie columns
+const (
+	kickOff = iota
+	league
+	_1_
+	_2_
+	tip1Name
+	tip1Val
+	tip2Name
+	tip2Val
+)

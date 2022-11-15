@@ -73,39 +73,44 @@ def program():
     scrape_mozzart([s.toMozzName() for s in sports_to_scrape])
     scrape_soccerbet([s.toSoccbetName() for s in sports_to_scrape])
 
-    # edit merge function
-    arbs = []
     for sport in sports_to_scrape:
         arg = str(sport).encode("utf-8")
         merge(arg)
-        res = find_arb(str(sport), 1000)
-        if res is None:
-            print("nema arbe ", sport, "\n")
-        else:
-            arbs.append(res)
+        find_arb(str(sport), 1000)
 
-    if len(arbs) != 0:
-        broadcast_to_telegram("ALO LELEMUDI STIGLE FRISKE ARBE")
-        # if len(old_arbs) == 0:
-        #     [broadcast_to_telegram(a.to_string()) for a in arbs]
-        # else:
-        #     for a in arbs:
-        #         print(a.to_string())
-        #         for b in old_arbs:
-        #             print(b.to_string())
-        #             print(a.compare(b))
-        #             print(a.compare(b).empty)
-    else:
-        broadcast_to_telegram("nema arbe :'(")
+    # arbs = []
+    # for sport in sports_to_scrape:
+    #     arg = str(sport).encode("utf-8")
+    #     merge(arg)
+    #     res = find_arb(str(sport), 1000)
+    #     if res is None:
+    #         print("nema arbe ", sport, "\n")
+    #     else:
+    #         arbs.append(res)
+    #
+    # if len(arbs) != 0:
+    #     broadcast_to_telegram("ALO LELEMUDI STIGLE FRISKE ARBE")
+    #     # if len(old_arbs) == 0:
+    #     #     [broadcast_to_telegram(a.to_string()) for a in arbs]
+    #     # else:
+    #     #     for a in arbs:
+    #     #         print(a.to_string())
+    #     #         for b in old_arbs:
+    #     #             print(b.to_string())
+    #     #             print(a.compare(b))
+    #     #             print(a.compare(b).empty)
+    # else:
+    #     broadcast_to_telegram("nema arbe :'(")
+    #
+    # print('wha')
+    # for a in arbs:
+    #     print(a.to_string())
+    #
+    # print("OVERALL EXECUTION TIME")
+    # print("--- %s seconds ---" % (time.time() - start_time))
+    #
+    # return arbs
 
-    print('wha')
-    for a in arbs:
-        print(a.to_string())
-
-    print("OVERALL EXECUTION TIME")
-    print("--- %s seconds ---" % (time.time() - start_time))
-
-    return arbs
 
 # def is_df_in_df_list(df, df_list):
 #     for el in df_list:
@@ -116,3 +121,5 @@ def program():
 #
 # def are_equal_dfs(df1, df2):
 #     return df1.compare(df2).empty
+
+program()

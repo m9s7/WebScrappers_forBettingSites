@@ -21,7 +21,7 @@ def parse_get_league_matches_info(response):
 
 
 def create_sidebar(master_data, sport_dict):
-    response = None
+    response = get_curr_sidebar_league_ids()
     while response is None:
         print("Stuck on soccerbet, get_curr_sidebar_league_ids()")
         response = get_curr_sidebar_league_ids()
