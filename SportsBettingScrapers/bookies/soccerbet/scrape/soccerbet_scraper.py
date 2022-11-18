@@ -27,7 +27,7 @@ def get_sports_currently_offered():
 
 
 def scrape(sports_to_scrape):
-    box_print("scraping soccerbet")
+    # box_print("scraping soccerbet")
 
     start_time = time.time()
 
@@ -55,7 +55,7 @@ def scrape(sports_to_scrape):
         if sport == SoccbetNames.tennis:
             df = tennis_odds_parser(sidebar[sport], betgame_dict, betgame_outcome_dict,
                                     betgame_groups_dict)
-        # TODO: add esports when they offer it in soccbet
+        # TODO: add esports when they offer it in soccbet (unless they dont offer esports?)
         # if sport == SoccbetNames.esports:
         #     df = esports_odds_parser(sidebar[sport], betgame_dict, betgame_outcome_dict,
         #                              betgame_groups_dict)

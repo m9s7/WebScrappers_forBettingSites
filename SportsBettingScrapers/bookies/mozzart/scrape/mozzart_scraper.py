@@ -33,8 +33,7 @@ def get_sports_currently_offered():
 
 def scrape(sports_to_scrape):
     start_time = time.time()
-    # print("...scraping mozz")
-    box_print("scraping mozz")
+    # box_print("scraping mozz")
 
     response = get_curr_sidebar_sports_and_leagues()
     while response is None:

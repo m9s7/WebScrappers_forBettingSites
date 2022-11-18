@@ -1,4 +1,5 @@
 import ctypes
+import json
 import time
 
 from common.models import StandardNames, MaxbNames, MozzNames, SoccbetNames
@@ -56,9 +57,6 @@ def in_at_least_2(el, set_list):
     return False
 
 
-# ne match-uje mi OutSliders - Mouz i MOUZ - Outsiders, zasto
-
-# old_arbs
 def get_bookies_names(a):
     book1_name, book2_name = "", ""
     for k, v in a.items():
@@ -72,13 +70,31 @@ def get_bookies_names(a):
     return book1_name, book2_name
 
 
-def center(line, max_line_len):
-    line_len = len(line)
-    padding = (max_line_len - line_len) // 2
-    return '|' + (' '*padding) + line + (' '*padding) + '|'
+def broadcast_arb(a, sport):
+    line0 = " --FRISKE ARBE-- "
+    league_name = next(v for k, v in a.items() if k.startswith('league_') and v is not None)
+    line1 = f"{sport}, {league_name.lower()}"
+    line2 = f"{a['1']} vs {a['2']}"
+    book1_name, book2_name = get_bookies_names(a)
+    line3 = f"{book1_name}:"
+    line3p5 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} <- {a['stake1']} din."
+    line4 = f"{book2_name}:"
+    print(a['tip1'])
+    print(a['tip2'].lower())
+    line4p5 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} <- {a['stake2']} din."
+    line5 = f"ROI: {a['ROI']}%"
+
+    lines = [line0, line1, line2, line3, line3p5, line4, line4p5, line5]
+    content = '\n'.join(lines)
+    broadcast_to_telegram(content)
+
+    broadcast_to_telegram(json.dumps(a, indent=2))
 
 
-def program():
+def program(old_arbs):
+    for a in old_arbs:
+        print(json.dumps(a, indent=4), '\n')
+
     start_time = time.time()
 
     library = ctypes.windll.LoadLibrary(
@@ -86,7 +102,6 @@ def program():
     merge = library.merge
     merge.argtypes = [ctypes.c_char_p]
 
-    # TODO: parallelize scraping
     sports_to_scrape = get_sports_to_scrape()
 
     arbs = []
@@ -100,48 +115,13 @@ def program():
         res = find_arb(str(sport), 1000)
         if res is None:
             continue
-        arbs.append(res)
 
         for a in res.to_dict('records'):
-            line0 = " --FRISKE ARBE-- "
-            league_name = next(v for k, v in a.items() if k.startswith('league_') and v is not None)
-            line1 = f"{sport}, {league_name.lower()}"
-            line2 = f"{a['1']} vs {a['2']}"
-            book1_name, book2_name = get_bookies_names(a)
-            line3p5 = f"{book1_name}:"
-            line3 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} <- {a['stake1']} din."
-            line4p5 = f"{book2_name}:"
-            line4 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} <- {a['stake2']} din."
-            line5 = f"ROI: {a['ROI']}%"
+            if a in old_arbs:
+                continue
+            arbs.append(a)
+            broadcast_arb(a, sport)
 
-            lines = [line0, line1, line2, line3, line3p5, line4, line4p5, line5]
-            max_line_len = max([len(line) for line in lines])
-            lines = [center(line, max_line_len) for line in lines]
-            content = '\n'.join(lines)
-            broadcast_to_telegram(content)
-            # broadcast_to_telegram(json.dumps(a, indent=2))
-
-    # if len(arbs) != 0:
-    #     broadcast_to_telegram("ALO LELEMUDI, STIGLE FRISKE ARBE")
-    #     for a in arbs:
-    #         broadcast_to_telegram(a)
-    #         print(a)
-
-    # if len(old_arbs) == 0:
-    #     [broadcast_to_telegram(a.to_string()) for a in arbs]
-    # else:
-    #     for a in arbs:
-    #         print(a.to_string())
-    #         for b in old_arbs:
-    #             print(b.to_string())
-    #             print(a.compare(b))
-    #             print(a.compare(b).empty)
-    # else:
-    #     broadcast_to_telegram("nema arbe :'(")
-
-    print("OVERALL EXECUTION TIME")
+    print("OVERALL ITERATION EXECUTION TIME")
     print("--- %s seconds ---" % (time.time() - start_time))
-    # return arbs
-
-
-program()
+    return arbs

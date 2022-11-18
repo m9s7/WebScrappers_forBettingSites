@@ -17,7 +17,6 @@ def scrape_esports(esports_id, all_subgames_json):
     export = []
     export_help = init_export_help(matches_response)
 
-    # TODO: make debugging mode
     # For testing with Insomnia
     # print(tennis_id)
     # print(list(export_help.keys())[1:10], " - ", subgames)

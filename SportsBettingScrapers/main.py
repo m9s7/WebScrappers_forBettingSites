@@ -1,7 +1,6 @@
-import time
-
 from program import program
 
+arbs = []
 while True:
-    program()
-    time.sleep(180)
+    arbs = program(arbs)
+    # time.sleep(180)

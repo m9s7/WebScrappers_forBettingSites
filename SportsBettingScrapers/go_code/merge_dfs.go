@@ -144,6 +144,18 @@ type bookie struct {
 	dfPointer *dataframe.DataFrame
 }
 
+// Indexes of bookie columns
+const (
+	kickOff = iota
+	league
+	_1_
+	_2_
+	tip1Name
+	tip1Val
+	tip2Name
+	tip2Val
+)
+
 func abs(x int64) int64 {
 	if x < 0 {
 		return -x
@@ -192,6 +204,10 @@ func ReadCSVFromFile(csvPath string) dataframe.DataFrame {
 		dataframe.DefaultType(series.String),
 	).Arrange(dataframe.Sort("1"))
 
+	err = file.Truncate(0)
+	if err != nil {
+		return dataframe.DataFrame{}
+	}
 	err = file.Close()
 	if err != nil {
 		return dataframe.DataFrame{}
@@ -327,15 +343,3 @@ func InitMergedRecordsColumns(mergedRecords *[][]string, bookies *[]bookie) {
 func main() {
 	//merge()
 }
-
-// Indexes of bookie columns
-const (
-	kickOff = iota
-	league
-	_1_
-	_2_
-	tip1Name
-	tip1Val
-	tip2Name
-	tip2Val
-)

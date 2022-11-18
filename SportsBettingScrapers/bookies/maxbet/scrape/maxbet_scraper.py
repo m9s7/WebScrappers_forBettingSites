@@ -61,7 +61,7 @@ def get_standardization_func_4_tip_names(sport):
 
 def scrape(sports_to_scrape):
     start_time = time.time()
-    box_print("scraping max")
+    # box_print("scraping max")
 
     response = get_curr_sidebar_sports_and_leagues()
     while response is None:
