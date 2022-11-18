@@ -81,7 +81,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_0-' + tip[5]
         # ug x+
         if tip.startswith('ug ') and tip.endswith('+') and tip_len == 5:
-            return 'UG_' + tip[3] + '+'
+            return f"UG_{tip[3]}+"
 
     # # UKUPNO GOLOVA PRVO POLUVREME
     if tip.startswith('1ug '):
@@ -90,7 +90,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_1P_0-' + tip[6]
         # 1ug x+
         if tip.startswith('1ug ') and tip.endswith('+') and tip_len == 6:
-            return 'UG_1P_' + tip[4] + '+'
+            return f"UG_1P_{tip[4]}+"
         # 1ug 0
         if tip == '1ug 0':
             return 'UG_1P_T0'
@@ -102,7 +102,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_2P_0-' + tip[6]
         # 2ug x+
         if tip.startswith('2ug ') and tip.endswith('+') and tip_len == 6:
-            return 'UG_2P_' + tip[4] + '+'
+            return f"UG_2P_{tip[4]}+"
         # 2ug 0
         if tip == '2ug 0':
             return 'UG_2P_T0'
@@ -114,7 +114,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_TIM1_0-' + tip[6]
         # tm1 x+
         if tip.startswith('tm1 ') and tip.endswith('+') and tip_len == 6:
-            return 'UG_TIM1_' + tip[4] + '+'
+            return f"UG_TIM1_{tip[4]}+"
         # tm1 0
         if tip == 'tm1 0':
             return 'UG_TIM1_T0'
@@ -126,7 +126,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_1P_TIM1_0-' + tip[7]
         # 1tm1 x+
         if tip.startswith('1tm1 ') and tip.endswith('+') and tip_len == 7:
-            return 'UG_1P_TIM1_' + tip[5] + '+'
+            return f"UG_1P_TIM1_{tip[5]}+"
         # 1tm1 0
         if tip == '1tm1 0':
             return 'UG_1P_TIM1_T0'
@@ -138,7 +138,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_2P_TIM1_0-' + tip[7]
         # 2tm1 x+
         if tip.startswith('2tm1 ') and tip.endswith('+') and tip_len == 7:
-            return 'UG_2P_TIM1_' + tip[5] + '+'
+            return f"UG_2P_TIM1_{tip[5]}+"
         # 2tm1 0
         if tip == '2tm1 0':
             return 'UG_2P_TIM1_T0'
@@ -150,7 +150,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_TIM2_0-' + tip[6]
         # tm2 x+
         if tip.startswith('tm2 ') and tip.endswith('+') and tip_len == 6:
-            return 'UG_TIM2_' + tip[4] + '+'
+            return f"UG_TIM2_{tip[4]}+"
         # tm1 0
         if tip == 'tm2 0':
             return 'UG_TIM2_T0'
@@ -162,7 +162,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_1P_TIM2_0-' + tip[7]
         # 1tm2 x+
         if tip.startswith('1tm2 ') and tip.endswith('+') and tip_len == 7:
-            return 'UG_1P_TIM2_' + tip[5] + '+'
+            return f"UG_1P_TIM2_{tip[5]}+"
         # 1tm2 0
         if tip == '1tm2 0':
             return 'UG_1P_TIM2_T0'
@@ -174,7 +174,7 @@ def standardize_soccer_tip_name(tip_name):
             return 'UG_2P_TIM2_0-' + tip[7]
         # 2tm2 x+
         if tip.startswith('2tm2 ') and tip.endswith('+') and tip_len == 7:
-            return 'UG_2P_TIM2_' + tip[5] + '+'
+            return f"UG_2P_TIM2_{tip[5]}+"
         # 2tm2 0
         if tip == '2tm2 0':
             return 'UG_2P_TIM2_T0'

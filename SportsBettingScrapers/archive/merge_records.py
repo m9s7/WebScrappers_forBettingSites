@@ -80,3 +80,5 @@ def merge_records(sport_name, maxbet, mozzart):
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return merged_records
+
+# def getBookieName(tip1_max, tips_lst):

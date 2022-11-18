@@ -2,10 +2,11 @@ import time
 
 from bookies.maxbet.scrape.odds_parsers.soccer_odds_parser import get_soccer_odds
 from bookies.maxbet.scrape.odds_parsers.general_2outcome_odds_parser import get_2outcome_odds
-from bookies.maxbet.standardize.standardization_functions import standardize_tennis_tip_name, standardize_table_tennis_tip_name, \
+from bookies.maxbet.standardize.standardization_functions import standardize_tennis_tip_name, \
+    standardize_table_tennis_tip_name, \
     standardize_esports_tip_name, standardize_basketball_tip_name, standardize_soccer_tip_name, \
     standardize_kickoff_time_string
-from common.common_functions import print_to_file, export_for_merge
+from common.common_functions import print_to_file, export_for_merge, box_print
 from common.models import MaxbNames, ExportIDX
 from requests_to_server.maxbet_requests import get_match_ids, get_curr_sidebar_sports_and_leagues
 
@@ -60,6 +61,7 @@ def get_standardization_func_4_tip_names(sport):
 
 def scrape(sports_to_scrape):
     start_time = time.time()
+    box_print("scraping max")
 
     response = get_curr_sidebar_sports_and_leagues()
     while response is None:

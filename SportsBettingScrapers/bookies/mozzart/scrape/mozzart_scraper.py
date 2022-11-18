@@ -1,6 +1,6 @@
 import time
 
-from common.common_functions import print_to_file, export_for_merge
+from common.common_functions import print_to_file, export_for_merge, box_print
 from common.models import MozzNames, ExportIDX
 
 from bookies.mozzart.scrape.odds_parsers.basketball_odds_parser import scrape_basketball
@@ -33,8 +33,8 @@ def get_sports_currently_offered():
 
 def scrape(sports_to_scrape):
     start_time = time.time()
-    print("...scraping mozz")
-    print(sports_to_scrape)
+    # print("...scraping mozz")
+    box_print("scraping mozz")
 
     response = get_curr_sidebar_sports_and_leagues()
     while response is None:

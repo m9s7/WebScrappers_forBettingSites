@@ -80,6 +80,8 @@ def get_match_odd_values(match_id):
         "X-Requested-With": "XMLHttpRequest"
     }
 
+    print(f"\r{match_id}", end='')
+
     response = r.request("GET", url, headers=headers, params=querystring)
     if not response.ok:
         return None

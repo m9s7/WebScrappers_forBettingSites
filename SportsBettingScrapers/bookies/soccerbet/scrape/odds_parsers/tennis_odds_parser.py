@@ -25,7 +25,6 @@ def tennis_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict,
             e1 = [match['kickoff'], league['Name'], match['home'], match['away']]
 
             match_odds = get_match_odd_values(match['match_id'])
-            print(f"\r{match['match_id']}")
             if match_odds is None:
                 continue
 
@@ -92,6 +91,6 @@ def tennis_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict,
                 matched_scraped_counter += 1
 
     df = pd.DataFrame(export, columns=scraper_columns)
+    print("\nMatches scraped: ", matched_scraped_counter)
     print("--- %s seconds ---" % (time.time() - start_time))
-    print("Matches scraped: ", matched_scraped_counter)
     return df

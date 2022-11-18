@@ -2,6 +2,7 @@ package main
 
 import (
 	"C"
+	"errors"
 	"fmt"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
@@ -12,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -20,7 +22,7 @@ func merge(_sportName *C.char) {
 	//arg: _sportName * C.char
 
 	var sportName string = C.GoString(_sportName)
-	//sportName := "tennis"
+	//sportName := "esports"
 
 	startTime := time.Now()
 	fmt.Println("... merging scraped data - " + sportName)
@@ -33,6 +35,10 @@ func merge(_sportName *C.char) {
 
 	var bookies []bookie
 	LoadBookiesFromImport(&bookies, &importPaths)
+	if len(bookies) < 2 {
+		fmt.Println("... nothing to merge - " + sportName)
+		return
+	}
 	OrderBooksByNumOfRecords(bookies)
 
 	mergedRecords := make([][]string, 0)
@@ -52,7 +58,6 @@ func merge(_sportName *C.char) {
 		doAddRecordToMerged := false
 
 		for bookieOrder := 1; bookieOrder < len(bookies); bookieOrder++ {
-
 			for j, el2 := range (*bookies[bookieOrder].dfPointer).Records() {
 
 				// skip column names row
@@ -68,8 +73,8 @@ func merge(_sportName *C.char) {
 				// check if kickoff times are similar
 				t1, _ := strconv.ParseInt(el1[kickOff], 10, 64)
 				t2, _ := strconv.ParseInt(el2[kickOff], 10, 64)
-				twentyMinutes := int64(1200)
-				if abs(t1-t2) > twentyMinutes {
+				oneHour := int64(3600)
+				if abs(t1-t2) > oneHour {
 					continue
 				}
 
@@ -268,7 +273,7 @@ func addElToRecord(el *[]string, bookieOrder int, record *[]string, mergedRecord
 //		print((*(b.dfPointer)).String())
 //	}
 //}
-
+//
 //func printSlice(slice []string) {
 //	for _, e := range slice {
 //		print(e, " ")
@@ -278,6 +283,11 @@ func addElToRecord(el *[]string, bookieOrder int, record *[]string, mergedRecord
 
 func LoadBookiesFromImport(bookies *[]bookie, importPaths *[]string) {
 	for i := 0; i < len(*importPaths); i++ {
+
+		_, err := os.OpenFile((*importPaths)[i], syscall.O_RDONLY, 0755)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
 
 		df := ReadCSVFromFile((*importPaths)[i])
 		if df.Nrow() == 0 {

@@ -20,6 +20,14 @@ def nice_print_json(data_json):
     print(json.dumps(data_json, indent=4, separators=(',', ': '), ensure_ascii=False).encode('utf8').decode())
 
 
+def box_print(string):
+    box_char = '='
+    print('\n')
+    print(box_char * (len(string) + 4))
+    print(box_char, string, box_char)
+    print(box_char * (len(string) + 4), '\n')
+
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 

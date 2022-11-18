@@ -28,6 +28,8 @@ def scrape_esports(esports_id, all_subgames_json):
             continue
 
         match_id = o['id']
+        print(f"\r{match_id}", end='')
+        
         e1 = export_help[match_id]
         export_match_helper = {}
 

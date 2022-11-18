@@ -1,6 +1,6 @@
 import time
 
-from common.common_functions import print_to_file, export_for_merge
+from common.common_functions import print_to_file, export_for_merge, box_print
 from common.models import StandardNames, SoccbetNames, ExportIDX
 from requests_to_server.soccerbet_requests import get_master_data
 from bookies.soccerbet.scrape.odds_parsers.basketball_odds_parser import basketball_odds_parser
@@ -15,7 +15,7 @@ from bookies.soccerbet.standardize.standardization_functions import standardize_
 
 
 def get_sports_currently_offered():
-    master_data = None
+    master_data = get_master_data()
     while master_data is None:
         print("Stuck on soccerbet, get_master_data()")
         master_data = get_master_data()
@@ -27,7 +27,8 @@ def get_sports_currently_offered():
 
 
 def scrape(sports_to_scrape):
-    print("scrapping soccerbet... ")
+    box_print("scraping soccerbet")
+
     start_time = time.time()
 
     master_data = get_master_data()
