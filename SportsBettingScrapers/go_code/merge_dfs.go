@@ -37,12 +37,16 @@ func merge(_sportName *C.char) {
 	LoadBookiesFromImport(&bookies, &importPaths)
 	if len(bookies) < 2 {
 		fmt.Println("... nothing to merge - " + sportName)
+		for _, b := range bookies {
+			fmt.Println(b.name)
+		}
 		return
 	}
 	OrderBooksByNumOfRecords(bookies)
 
 	mergedRecords := make([][]string, 0)
 	InitMergedRecordsColumns(&mergedRecords, &bookies)
+	fmt.Println("len(bookies):", len(bookies))
 	mergedRecordsColIndxMap := GetColumnIndexes(len(bookies))
 
 	// Merge
@@ -190,32 +194,6 @@ func getBookieNameFromPath(path string) string {
 	return bookieName[0:delim]
 }
 
-func ReadCSVFromFile(csvPath string) dataframe.DataFrame {
-
-	file, err := os.Open(csvPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	df := dataframe.ReadCSV(
-		file,
-		dataframe.HasHeader(true),
-		dataframe.DetectTypes(false),
-		dataframe.DefaultType(series.String),
-	).Arrange(dataframe.Sort("1"))
-
-	err = file.Truncate(0)
-	if err != nil {
-		return dataframe.DataFrame{}
-	}
-	err = file.Close()
-	if err != nil {
-		return dataframe.DataFrame{}
-	}
-
-	return df
-}
-
 func shouldSwitchTipVals(tipName string, sportName string) bool {
 
 	var tipNamesNotToSwitch [4]string
@@ -283,29 +261,31 @@ func addElToRecord(el *[]string, bookieOrder int, record *[]string, mergedRecord
 
 //TODO: parallelize MERGING IN GO
 
-//func PrintBookies(bookies *[]bookie) {
-//	for _, b := range *bookies {
-//		print(b.name)
-//		print((*(b.dfPointer)).String())
-//	}
-//}
-//
-//func printSlice(slice []string) {
-//	for _, e := range slice {
-//		print(e, " ")
-//	}
-//	print("\n")
-//}
-
 func LoadBookiesFromImport(bookies *[]bookie, importPaths *[]string) {
 	for i := 0; i < len(*importPaths); i++ {
 
-		_, err := os.OpenFile((*importPaths)[i], syscall.O_RDONLY, 0755)
+		file, err := os.OpenFile((*importPaths)[i], syscall.O_RDWR, 0755)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 
-		df := ReadCSVFromFile((*importPaths)[i])
+		df := dataframe.ReadCSV(
+			file,
+			dataframe.HasHeader(true),
+			dataframe.DetectTypes(false),
+			dataframe.DefaultType(series.String),
+		).Arrange(dataframe.Sort("1"))
+
+		err = file.Truncate(0)
+		if err != nil {
+			print("File truncate after load failed")
+			print(err.Error())
+		}
+		err = file.Close()
+		if err != nil {
+			print("File close after load failed")
+			print(err.Error())
+		}
 		if df.Nrow() == 0 {
 			continue
 		}

@@ -71,24 +71,18 @@ def get_bookies_names(a):
 
 
 def broadcast_arb(a, sport):
-    line0 = " --FRISKE ARBE-- "
+    line0 = " *FRISKE ARBE* "
     league_name = next(v for k, v in a.items() if k.startswith('league_') and v is not None)
-    line1 = f"{sport}, {league_name.lower()}"
+    line1 = f"{sport}, {league_name}".upper()
     line2 = f"{a['1']} vs {a['2']}"
     book1_name, book2_name = get_bookies_names(a)
-    line3 = f"{book1_name}:"
-    line3p5 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} <- {a['stake1']} din."
-    line4 = f"{book2_name}:"
-    print(a['tip1'])
-    print(a['tip2'].lower())
-    line4p5 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} <- {a['stake2']} din."
+    line3 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} ({book1_name}) <- {int(a['stake1'])} din."
+    line4 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} ({book2_name}) <- {int(a['stake2'])} din."
     line5 = f"ROI: {a['ROI']}%"
 
-    lines = [line0, line1, line2, line3, line3p5, line4, line4p5, line5]
+    lines = [line0, line1, line2, line3, line4, line5]
     content = '\n'.join(lines)
     broadcast_to_telegram(content)
-
-    broadcast_to_telegram(json.dumps(a, indent=2))
 
 
 def program(old_arbs):
