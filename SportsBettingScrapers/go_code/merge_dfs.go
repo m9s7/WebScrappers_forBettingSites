@@ -46,7 +46,6 @@ func merge(_sportName *C.char) {
 
 	mergedRecords := make([][]string, 0)
 	InitMergedRecordsColumns(&mergedRecords, &bookies)
-	fmt.Println("len(bookies):", len(bookies))
 	mergedRecordsColIndxMap := GetColumnIndexes(len(bookies))
 
 	// Merge

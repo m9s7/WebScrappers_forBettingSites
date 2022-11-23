@@ -111,9 +111,9 @@ def program(old_arbs):
             continue
 
         for a in res.to_dict('records'):
+            arbs.append(a)
             if a in old_arbs:
                 continue
-            arbs.append(a)
             broadcast_arb(a, sport)
 
     print("OVERALL ITERATION EXECUTION TIME")
