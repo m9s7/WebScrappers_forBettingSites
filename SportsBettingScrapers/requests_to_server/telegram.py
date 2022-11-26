@@ -1,16 +1,12 @@
 import json
 import sys
 import requests
+import os
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv())
 
-def init_token():
-    token_file_path = r'C:\Users\Matija\PycharmProjects\ScrapeEscape\SportsBettingScrapers\requests_to_server\telegram_token'
-    with open(token_file_path) as f:
-        _TOKEN = f.readline().strip()
-    return _TOKEN
-
-
-TOKEN = init_token()
+TOKEN = os.environ.get("BOT_TOKEN")
 
 url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 payload = {
@@ -35,7 +31,7 @@ def _broadcast_to_telegram(msg, chat_id):
     response = requests.post(url, json=payload, headers=headers)
 
     if response.ok is not True:
-        print("A U KURAC NIJE SE POSLALA PORUKA")
+        print("\n\n\nERROR: msg not sent to telegram!!\n\n\n")
         print(json.dumps(response, indent=4))
         sys.exit(1)
 
