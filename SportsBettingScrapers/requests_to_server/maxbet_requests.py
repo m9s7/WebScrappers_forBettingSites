@@ -1,7 +1,7 @@
 import requests as r
 from requests import JSONDecodeError
 
-from requests_to_server.telegram import broadcast_to_telegram
+from requests_to_server.telegram import broadcast_to_dev
 
 # add SESSION = {session_cookie}; to header, if cookies ever become necessary
 header = {
@@ -21,7 +21,7 @@ def get_curr_sidebar_sports_and_leagues():
         result = response.json()
         return result
     except JSONDecodeError:
-        broadcast_to_telegram(response.text)
+        broadcast_to_dev("JSONDecodeError u get_curr_sidebar_sports_and_leagues")
         return None
 
 
@@ -38,7 +38,7 @@ def get_match_ids(league_list):
         result = response.json()
         return result
     except JSONDecodeError:
-        broadcast_to_telegram(response.text)
+        broadcast_to_dev("JSONDecodeError u get_match_ids")
         return None
 
 
@@ -59,5 +59,5 @@ def get_match_data(match_id):
         result = response.json()
         return result
     except JSONDecodeError:
-        broadcast_to_telegram(response.text)
+        broadcast_to_dev("JSONDecodeError u get_match_data")
         return None

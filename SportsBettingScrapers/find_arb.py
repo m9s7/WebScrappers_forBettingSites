@@ -39,12 +39,15 @@ def find_arb(sport_name, capital):
     if results.empty:
         return None
 
-    results['stake1'] = round(results['%_bet1'] * capital)
-    results['stake2'] = round(results['%_bet2'] * capital)
-    results['total_stake'] = round(results['stake1'] + results['stake2'])
-    results['ROI'] = round(((capital / results['total_stake']) - 1) * 100, 2)
+    # results['stake1'] = round(results['%_bet1'] * capital)
+    # results['stake2'] = round(results['%_bet2'] * capital)
+    # results['total_stake'] = round(results['stake1'] + results['stake2'])
+    results['%_bet1_scaled'] = (records['%_bet1'] / records['outlay']) * 100
+    results['%_bet2_scaled'] = (records['%_bet2'] / records['outlay']) * 100
 
-    results = results.drop(['%_bet1', '%_bet2'], axis=1)
+    results['ROI'] = round(((1 / results['outlay']) - 1) * 100, 2)
+
+    # results = results.drop(['%_bet1', '%_bet2'], axis=1)
 
     print_to_file(results.to_string(index=False), f"arbs_{sport_name}.txt")
     print("--- %s seconds ---" % (time.time() - start_time))

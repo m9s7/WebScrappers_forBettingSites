@@ -10,7 +10,7 @@ from bookies.mozzart.scrape.mozzart_scraper import get_sports_currently_offered 
 from bookies.soccerbet.scrape.soccerbet_scraper import \
     get_sports_currently_offered as get_sports_currently_offered_soccbet, scrape as scrape_soccerbet
 from find_arb import find_arb
-from requests_to_server.telegram import broadcast_to_telegram
+from requests_to_server.telegram import broadcast_to_free, broadcast_to_premium, broadcast_to_dev
 
 
 def get_sports_to_scrape():
@@ -76,13 +76,20 @@ def broadcast_arb(a, sport):
     line1 = f"{sport}, {league_name}".upper()
     line2 = f"{a['1']} vs {a['2']}"
     book1_name, book2_name = get_bookies_names(a)
-    line3 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} ({book1_name}) <- {int(a['stake1'])} din."
-    line4 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} ({book2_name}) <- {int(a['stake2'])} din."
+    line3 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} ({book1_name}) <- {round(a['%_bet1_scaled'])}%"
+    line4 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} ({book2_name}) <- {round(a['%_bet2_scaled'])}%"
     line5 = f"ROI: {a['ROI']}%"
 
     lines = [line0, line1, line2, line3, line4, line5]
     content = '\n'.join(lines)
-    broadcast_to_telegram(content)
+
+    if a['ROI'] < 1.5:
+        broadcast_to_free(content)
+        return
+    if a['ROI'] >= 1.0:
+        broadcast_to_premium(content)
+        return
+    broadcast_to_dev(content)
 
 
 def program(old_arbs):
