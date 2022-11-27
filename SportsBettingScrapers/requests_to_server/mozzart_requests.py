@@ -1,6 +1,10 @@
 import requests as r
 from datetime import datetime
 
+from requests import JSONDecodeError
+
+from requests_to_server.telegram import broadcast_to_dev
+
 
 def get_curr_sidebar_sports_and_leagues():
     url = "https://www.mozzartbet.com/getRegularGroups"
@@ -34,7 +38,18 @@ def get_curr_sidebar_sports_and_leagues():
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_curr_sidebar_sports_and_leagues (mozz)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
 
 
 def get_all_subgames():
@@ -51,7 +66,18 @@ def get_all_subgames():
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_all_subgames (mozz)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
 
 
 def get_match_ids(sport_id=None):
@@ -88,9 +114,21 @@ def get_match_ids(sport_id=None):
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_match_ids (mozz)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
 
 
+# TODO: Make get_odds foolproof
 def get_odds(matches, subgames):
     url = "https://www.mozzartbet.com/getBettingOdds"
     headers = {
@@ -117,6 +155,10 @@ def get_odds(matches, subgames):
     }
 
     response = r.request("POST", url, json=payload, headers=headers)
+    while not response.ok:
+        broadcast_to_dev("Stuck on mozz get_odds")
+        response = r.request("POST", url, json=payload, headers=headers)
+
     result = response.json()
 
     # Send more if you need
@@ -130,8 +172,9 @@ def get_odds(matches, subgames):
         }
 
         response = r.request("POST", url, json=payload, headers=headers)
+        if not response.ok:
+            continue
 
-        # print(response.json(), "\n\n\n\n\n")
         result = result + response.json()
 
     return result

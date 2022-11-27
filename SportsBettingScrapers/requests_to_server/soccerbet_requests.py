@@ -1,4 +1,7 @@
 import requests as r
+from requests import JSONDecodeError
+
+from requests_to_server.telegram import broadcast_to_dev
 
 
 def get_curr_sidebar_league_ids():
@@ -19,7 +22,18 @@ def get_curr_sidebar_league_ids():
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_curr_sidebar_league_ids (socc)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
 
 
 def get_master_data():
@@ -39,7 +53,18 @@ def get_master_data():
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_master_data (socc)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
 
 
 def get_league_matches_info(league_id):
@@ -61,7 +86,18 @@ def get_league_matches_info(league_id):
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_league_matches_info (socc)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
 
 
 def get_match_odd_values(match_id):
@@ -86,4 +122,15 @@ def get_match_odd_values(match_id):
     if not response.ok:
         return None
 
-    return response.json()
+    try:
+        result = response.json()
+        return result
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_match_odd_values (socc)\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None

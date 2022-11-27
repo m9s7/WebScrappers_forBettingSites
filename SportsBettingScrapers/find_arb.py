@@ -42,8 +42,8 @@ def find_arb(sport_name, capital):
     # results['stake1'] = round(results['%_bet1'] * capital)
     # results['stake2'] = round(results['%_bet2'] * capital)
     # results['total_stake'] = round(results['stake1'] + results['stake2'])
-    results['%_bet1_scaled'] = (records['%_bet1'] / records['outlay']) * 100
-    results['%_bet2_scaled'] = (records['%_bet2'] / records['outlay']) * 100
+    results['%_bet1_scaled'] = (records['%_bet1'] / records['outlay'])
+    results['%_bet2_scaled'] = (records['%_bet2'] / records['outlay'])
 
     results['ROI'] = round(((1 / results['outlay']) - 1) * 100, 2)
 

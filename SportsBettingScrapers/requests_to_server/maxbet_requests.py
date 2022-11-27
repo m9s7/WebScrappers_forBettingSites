@@ -20,8 +20,14 @@ def get_curr_sidebar_sports_and_leagues():
     try:
         result = response.json()
         return result
-    except JSONDecodeError:
-        broadcast_to_dev("JSONDecodeError u get_curr_sidebar_sports_and_leagues")
+    except JSONDecodeError as e:
+        print(e)
+        broadcast_to_dev("JSONDecodeError u get_curr_sidebar_sports_and_leagues\n")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
         return None
 
 
@@ -37,8 +43,14 @@ def get_match_ids(league_list):
     try:
         result = response.json()
         return result
-    except JSONDecodeError:
+    except JSONDecodeError as e:
+        print(e)
         broadcast_to_dev("JSONDecodeError u get_match_ids")
+        broadcast_to_dev(str(e))
+        return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
         return None
 
 
@@ -58,6 +70,13 @@ def get_match_data(match_id):
     try:
         result = response.json()
         return result
-    except JSONDecodeError:
+    except JSONDecodeError as e:
+        print(e)
         broadcast_to_dev("JSONDecodeError u get_match_data")
+        broadcast_to_dev(str(e))
         return None
+    except Exception as e:
+        print(e)
+        broadcast_to_dev(str(e))
+        return None
+

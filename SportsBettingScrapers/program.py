@@ -10,7 +10,7 @@ from bookies.mozzart.scrape.mozzart_scraper import get_sports_currently_offered 
 from bookies.soccerbet.scrape.soccerbet_scraper import \
     get_sports_currently_offered as get_sports_currently_offered_soccbet, scrape as scrape_soccerbet
 from find_arb import find_arb
-from requests_to_server.telegram import broadcast_to_free, broadcast_to_premium, broadcast_to_dev
+from requests_to_server.telegram import broadcast_to_free, broadcast_to_premium
 
 
 def get_sports_to_scrape():
@@ -71,25 +71,23 @@ def get_bookies_names(a):
 
 
 def broadcast_arb(a, sport):
-    line0 = " *FRISKE ARBE* "
     league_name = next(v for k, v in a.items() if k.startswith('league_') and v is not None)
     line1 = f"{sport}, {league_name}".upper()
     line2 = f"{a['1']} vs {a['2']}"
     book1_name, book2_name = get_bookies_names(a)
-    line3 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} ({book1_name}) <- {round(a['%_bet1_scaled'])}%"
-    line4 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} ({book2_name}) <- {round(a['%_bet2_scaled'])}%"
-    line5 = f"ROI: {a['ROI']}%"
+    line3 = f"---{book1_name} tiket:"
+    line4 = f"{a['tip1'].lower()} @ {a['tip1_MAX']} <- ulog x {round(a['%_bet1_scaled'], 3)}"
+    line5 = f"---{book2_name} tiket:"
+    line6 = f"{a['tip2'].lower()} @ {a['tip2_MAX']} <- ulog x {round(a['%_bet2_scaled'], 3)}"
+    line7 = f"ROI: {a['ROI']}%"
 
-    lines = [line0, line1, line2, line3, line4, line5]
+    lines = [line1, line2, line3, line4, line5, line6, line7]
     content = '\n'.join(lines)
 
     if a['ROI'] < 1.5:
         broadcast_to_free(content)
-        return
     if a['ROI'] >= 1.0:
         broadcast_to_premium(content)
-        return
-    broadcast_to_dev(content)
 
 
 def program(old_arbs):
