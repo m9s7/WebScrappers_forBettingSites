@@ -1,6 +1,8 @@
+import csv
 import ctypes
 import json
 import time
+from datetime import datetime
 
 from common.models import StandardNames, MaxbNames, MozzNames, SoccbetNames
 from bookies.maxbet.scrape.maxbet_scraper import get_sports_currently_offered as get_sports_currently_offered_maxb, \
@@ -72,6 +74,9 @@ def get_bookies_names(a):
 
 def broadcast_arb(a, sport):
     league_name = next(v for k, v in a.items() if k.startswith('league_') and v is not None)
+
+    # for_log = {}
+
     line1 = f"{sport}, {league_name}".upper()
     line2 = f"{a['1']} vs {a['2']}"
     book1_name, book2_name = get_bookies_names(a)
@@ -88,6 +93,19 @@ def broadcast_arb(a, sport):
         broadcast_to_free(content)
     if a['ROI'] >= 1.0:
         broadcast_to_premium(content)
+
+    b = {
+        'date': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+        'sport': sport,
+        'league': league_name,
+        'book1': book1_name,
+        'book2': book2_name
+    }
+    with open('stats.csv', 'a') as f:
+        w = csv.writer(f)
+        c = a | b
+        # w.writerow(c.keys())
+        w.writerow(c.values())
 
 
 def program(old_arbs):
@@ -120,7 +138,8 @@ def program(old_arbs):
             if a in old_arbs:
                 continue
             broadcast_arb(a, sport)
+            print(json.dumps(a, indent=4), '\n')
 
-    print("OVERALL ITERATION EXECUTION TIME")
-    print("--- %s seconds ---" % (time.time() - start_time))
+    print("\n\n\nOVERALL PROGRAM EXECUTION TIME")
+    print("--- %s seconds ---\n\n\n" % (time.time() - start_time))
     return arbs
