@@ -11,6 +11,8 @@ def find_arb(sport_name, capital):
     else:
         return None
 
+    # 1669696200,NBA,Košarka NBA,NBA,L.A. Lakers,Indiana,KI_1_w/OT,1.600000,1.530000,1.520000,KI_2_w/OT,2.350000,2.400000,2.470000
+
     print("...finding arbitrage opportunities\n-------------------------")
     start_time = time.time()
 

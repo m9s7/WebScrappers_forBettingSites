@@ -5,6 +5,7 @@ import pandas as pd
 from common.models import scraper_columns
 from requests_to_server.soccerbet_requests import get_league_matches_info, get_match_odd_values
 from bookies.soccerbet.scrape.parse_response_functions import parse_get_league_matches_info
+from requests_to_server.telegram import broadcast_to_dev
 
 
 def soccer_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict, betgame_groups_dict):
@@ -17,7 +18,8 @@ def soccer_odds_parser(leagues_from_sidebar, betgame_dict, betgame_outcome_dict,
 
         response = get_league_matches_info(league['Id'])
         if response is None:
-            print(f"Soccerbet league {league['Id']}, get_league_matches_info() is None, skipping it..")
+            broadcast_to_dev(f"Soccerbet league {league['Id']}, get_league_matches_info() is None, skipping it..")
+            continue
         match_info_list = parse_get_league_matches_info(response)
 
         for match in match_info_list:

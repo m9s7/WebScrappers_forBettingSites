@@ -19,7 +19,7 @@ def get_sports_to_scrape():
         StandardNames.basketball,
         StandardNames.esports,
         StandardNames.soccer,
-        StandardNames.tabletennis
+        # StandardNames.tabletennis
     }
     maxb_available_sports = set(
         [MaxbNames.fromString(s).toStandardName() for s in get_sports_currently_offered_maxb() if
