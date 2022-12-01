@@ -72,10 +72,8 @@ def get_bookies_names(a):
     return book1_name, book2_name
 
 
-def broadcast_arb(a, sport):
+def arb_to_string(a, sport):
     league_name = next(v for k, v in a.items() if k.startswith('league_') and v is not None)
-
-    # for_log = {}
 
     line1 = f"{sport}, {league_name}".upper()
     line2 = f"{a['1']} vs {a['2']}"
@@ -88,16 +86,16 @@ def broadcast_arb(a, sport):
 
     lines = [line1, line2, line3, line4, line5, line6, line7]
     content = '\n'.join(lines)
+    return content
 
-    if a['ROI'] < 1.5:
-        broadcast_to_free(content)
-    if a['ROI'] >= 1.0:
-        broadcast_to_premium(content)
 
+def export_for_stats(a, sport):
+
+    book1_name, book2_name = get_bookies_names(a)
     b = {
         'date': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
         'sport': sport,
-        'league': league_name,
+        'league': next(v for k, v in a.items() if k.startswith('league_') and v is not None),
         'book1': book1_name,
         'book2': book2_name
     }
@@ -105,7 +103,10 @@ def broadcast_arb(a, sport):
         w = csv.writer(f)
         c = a | b
         # w.writerow(c.keys())
-        w.writerow(c.values())
+        try:
+            w.writerow(c.values())
+        except:
+            pass
 
 
 def program(old_arbs):
@@ -134,11 +135,17 @@ def program(old_arbs):
             continue
 
         for a in res.to_dict('records'):
-            arbs.append(a)
-            if a in old_arbs:
+            a_string = arb_to_string(a, sport)
+            arbs.append(a_string)
+            if a_string in old_arbs:
                 continue
-            broadcast_arb(a, sport)
-            print(json.dumps(a, indent=4), '\n')
+
+            if a['ROI'] < 1.5:
+                broadcast_to_free(a_string)
+            if a['ROI'] >= 1.0:
+                broadcast_to_premium(a_string)
+
+            export_for_stats(a, sport)
 
     print("\n\n\nOVERALL PROGRAM EXECUTION TIME")
     print("--- %s seconds ---\n\n\n" % (time.time() - start_time))
