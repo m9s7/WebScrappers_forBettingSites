@@ -10,7 +10,7 @@ header = {
 
 def get_curr_sidebar_sports_and_leagues():
     url = "https://www.maxbet.rs/ibet/offer/sportsAndLeagues/-1.json"
-    querystring = {"v": "4.48.18", "locale": "sr"}
+    querystring = {"v": "4.50.1", "locale": "sr"}
 
     response = r.request("GET", url, headers=header, params=querystring)
 
@@ -34,7 +34,7 @@ def get_curr_sidebar_sports_and_leagues():
 def get_match_ids(league_list):
     request_url = "https://www.maxbet.rs/ibet/offer/leagues//-1/0.json"
     token = '#'.join([str(league) for league in league_list])
-    query = {"v": "4.48.18", "locale": "sr", "token": token, "ttgIds": ""}
+    query = {"v": "4.50.1", "locale": "sr", "token": token, "ttgIds": ""}
 
     response = r.request("GET", request_url, headers=header, params=query)
     if not response.ok:
@@ -56,7 +56,7 @@ def get_match_ids(league_list):
 
 def get_match_data(match_id):
     url = f"https://www.maxbet.rs/ibet/offer/special/undefined/{match_id}.json"
-    querystring = {"v": "4.48.18", "locale": "sr"}
+    querystring = {"v": "4.50.1", "locale": "sr"}
 
     print(f"\r{match_id}", end='')
 
@@ -79,4 +79,3 @@ def get_match_data(match_id):
         print(e)
         broadcast_to_dev(str(e))
         return None
-

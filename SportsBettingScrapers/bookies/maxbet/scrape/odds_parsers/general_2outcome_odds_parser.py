@@ -2,7 +2,7 @@ import time
 
 import pandas as pd
 
-from common.models import ExportIDX
+from common.models import ExportIDX, scraper_columns
 from requests_to_server.maxbet_requests import get_match_data
 
 
@@ -33,8 +33,7 @@ def get_2outcome_odds(match_ids, subgame_names):
             e[ExportIDX.TIP2_VAL] = subgame['tipTypes'][1]['value']
             export.append(e[:])
 
-    columns = ['kick_off', 'league', '1', '2', 'tip1_name', 'tip1_val', 'tip2_name', 'tip2_val']
-    df = pd.DataFrame(export, columns=columns)
+    df = pd.DataFrame(export, columns=scraper_columns)
     print("\nMatches scraped: ", matches_scraped_counter)
     print("--- %s seconds ---" % (time.time() - start_time))
     return df
